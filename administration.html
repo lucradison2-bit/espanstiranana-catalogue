@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administration - Espantsiranana Catalogue</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <main class="container">
+    <div class="page-heading">
+      <p class="eyebrow">Espace sécurisé</p>
+      <h1>Administration</h1>
+      <p>Gérez les livres, les comptes et les emprunts.</p>
+    </div>
+
+    <section class="admin-tabs">
+      <button class="tab-button active" data-section="dashboard">
+        Tableau de bord
+      </button>
+      <button class="tab-button" data-section="livres">
+        Ajouter un livre
+      </button>
+      <button class="tab-button" data-section="utilisateurs">
+        Utilisateurs
+      </button>
+      <button class="tab-button" data-section="emprunts">
+        Emprunts
+      </button>
+    </section>
+
+    <section id="dashboard" class="admin-section active">
+      <div id="admin-stats" class="stats"></div>
+    </section>
+
+    <section id="livres" class="admin-section">
+      <form id="form-livre" class="form-card">
+        <h2>Ajouter un livre</h2>
+
+        <label for="book-title">Titre</label>
+        <input id="book-title" required>
+
+        <label for="book-author">Auteur</label>
+        <input id="book-author" required>
+
+        <label for="book-reference">Numéro de référence</label>
+        <input id="book-reference" required>
+
+        <label for="book-category">Catégorie</label>
+        <input id="book-category" placeholder="Programmation">
+
+        <label for="book-summary">Résumé</label>
+        <textarea id="book-summary" rows="5"></textarea>
+
+        <button class="button" type="submit">Ajouter le livre</button>
+        <div id="book-message"></div>
+      </form>
+    </section>
+
+    <section id="utilisateurs" class="admin-section">
+      <div id="liste-utilisateurs"></div>
+    </section>
+
+    <section id="emprunts" class="admin-section">
+      <div id="liste-emprunts"></div>
+    </section>
+  </main>
+
+  <footer id="footer"></footer>
+
+  <script type="module" src="./js/administration.js"></script>
+</body>
+  </html>
