@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - Espantsiranana Catalogue</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <main class="container narrow">
+    <form id="form-connexion" class="form-card">
+      <h1>Connexion</h1>
+      <p class="muted">Accédez à votre espace utilisateur.</p>
+
+      <label for="email">Adresse e-mail</label>
+      <input id="email" type="email" required>
+
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" required>
+
+      <button class="button full" type="submit">Se connecter</button>
+
+      <div id="message"></div>
+
+      <p class="muted">
+        Pas encore de compte ?
+        <a href="./inscription.html">Créer un compte</a>
+      </p>
+    </form>
+  </main>
+
+  <footer id="footer"></footer>
+
+  <script type="module" src="./js/auth.js"></script>
+</body>
+</html>
