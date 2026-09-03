@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription - Espantsiranana Catalogue</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <main class="container narrow">
+    <form id="form-inscription" class="form-card">
+      <h1>Créer un compte</h1>
+      <p class="muted">
+        Votre compte devra être validé par l’administrateur.
+      </p>
+
+      <div class="form-grid">
+        <div>
+          <label for="first-name">Prénom</label>
+          <input id="first-name" required>
+        </div>
+
+        <div>
+          <label for="last-name">Nom</label>
+          <input id="last-name" required>
+        </div>
+
+        <div>
+          <label for="email">Adresse e-mail</label>
+          <input id="email" type="email" required>
+        </div>
+
+        <div>
+          <label for="phone">Téléphone</label>
+          <input id="phone">
+        </div>
+
+        <div>
+          <label for="student-card">Carte étudiant</label>
+          <input id="student-card">
+        </div>
+
+        <div>
+          <label for="identity-card">Carte d’identité</label>
+          <input id="identity-card">
+        </div>
+      </div>
+
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" minlength="6" required>
+
+      <button class="button full" type="submit">Créer mon compte</button>
+
+      <div id="message"></div>
+
+      <p class="muted">
+        Vous avez déjà un compte ?
+        <a href="./connexion.html">Se connecter</a>
+      </p>
+    </form>
+  </main>
+
+  <footer id="footer"></footer>
+
+  <script type="module" src="./js/auth.js"></script>
+</body>
+</html>
