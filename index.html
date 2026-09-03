@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espantsiranana Catalogue</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <header id="header"></header>
+
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">Catalogue numérique par QR code</p>
+      <h1>Espantsiranana Catalogue</h1>
+      <p>
+        Consultez les livres disponibles et demandez un emprunt
+        depuis votre téléphone.
+      </p>
+      <a href="./catalogue.html" class="button button-light">
+        Explorer le catalogue
+      </a>
+    </section>
+
+    <section class="stats">
+      <article class="stat-card">
+        <strong id="total-livres">0</strong>
+        <span>Livres enregistrés</span>
+      </article>
+
+      <article class="stat-card">
+        <strong id="livres-disponibles">0</strong>
+        <span>Livres disponibles</span>
+      </article>
+
+      <article class="stat-card">
+        <strong>14 jours</strong>
+        <span>Durée d’emprunt</span>
+      </article>
+    </section>
+
+    <section>
+      <div class="section-heading">
+        <h2>Livres récemment ajoutés</h2>
+        <a href="./catalogue.html">Voir tout</a>
+      </div>
+
+      <div id="livres-recents" class="books-grid"></div>
+    </section>
+  </main>
+
+  <footer id="footer"></footer>
+
+  <script type="module" src="./js/accueil.js"></script>
+</body>
+</html>
