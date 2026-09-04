@@ -686,7 +686,6 @@ Cette action est irréversible et supprimera aussi ses emprunts.`;
     console.error('Erreur suppression utilisateur:', error);
     alert('Impossible de supprimer cet utilisateur. Voir la console.');
   }
-  }
   async function actionMembre(event) {
   const bouton = event.target.closest('button[data-action]');
 
@@ -698,4 +697,4 @@ Cette action est irréversible et supprimera aussi ses emprunts.`;
 
     await actionSupprimerUtilisateur(id, email);
   }
-  }
+  
