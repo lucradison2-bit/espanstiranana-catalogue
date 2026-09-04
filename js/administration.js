@@ -29,7 +29,8 @@ export async function initAdministration() {
   await Promise.all([
     chargerComptes(),
     chargerEmprunts(),
-    chargerLivres()
+    chargerLivres(),
+    chargerTousMembres()
   ]);
 }
 
@@ -602,3 +603,51 @@ function imprimerQR() {
 
   setTimeout(() => fenetre.print(), 400);
 }
+
+async function chargerTousMembres() {
+  const tbody = document.querySelector('#table-tous-membres tbody');
+
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    tbody.innerHTML =
+      '<tr><td colspan="6">Erreur lors du chargement des membres.</td></tr>';
+    return;
+  }
+
+  tbody.innerHTML = data.length
+    ? ''
+    : '<tr><td colspan="6">Aucun membre.</td></tr>';
+
+  data.forEach((profil) => {
+    const nom =
+      `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+
+    tbody.insertAdjacentHTML(
+      'beforeend',
+      `
+      <tr>
+        <td>${echapper(nom)}</td>
+        <td>${echapper(profil.email)}</td>
+        <td>${echapper(profil.role)}</td>
+        <td>
+          <span class="badge badge-${
+            profil.status === 'active'
+              ? 'approved'
+              : profil.status === 'rejected'
+                ? 'rejected'
+                : 'pending'
+          }">
+            ${profil.status}
+          </span>
+        </td>
+        <td>${echapper(profil.carte_identite || '-')}</td>
+        <td>${echapper(profil.carte_etudiant || '-')}</td>
+      </tr>
+      `
+    );
+  });
+                    }
