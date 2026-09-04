@@ -14,9 +14,12 @@ export async function initAdministration() {
   document.getElementById('contenu-admin')?.classList.remove('hidden');
 
   installerEvenements();
-  await chargerComptesEnAttente();
-  await chargerDemandes();
-  await chargerLivres();
+
+  await Promise.all([
+    chargerComptesEnAttente(),
+    chargerDemandes(),
+    chargerLivres()
+  ]);
 }
 
 function installerEvenements() {
@@ -64,7 +67,9 @@ function echapperHtml(texte) {
 }
 
 function formatDate(date) {
-  if (!date) return '-';
+  if (!date) {
+    return '-';
+  }
 
   return new Date(date).toLocaleDateString('fr-FR', {
     day: '2-digit',
@@ -73,23 +78,59 @@ function formatDate(date) {
   });
 }
 
-function dateDans14Jours() {
+function dateInputDans14Jours() {
   const date = new Date();
   date.setDate(date.getDate() + JOURS_PRET_PAR_DEFAUT);
   return date.toISOString().slice(0, 10);
 }
 
+function dateVersInput(date) {
+  if (!date) {
+    return dateInputDans14Jours();
+  }
+
+  return new Date(date).toISOString().slice(0, 10);
+}
+
 function convertirDateInput(dateInput) {
-  if (!dateInput) return null;
+  if (!dateInput) {
+    return null;
+  }
+
   return new Date(`${dateInput}T12:00:00`).toISOString();
 }
 
-function construireLienLivre(livreId) {
-  const base = window.location.href.split('/').slice(0, -1).join('/');
-  return `${base}/livre.html?id=${encodeURIComponent(livreId)}`;
+function afficherMessageLivre(message, type = '') {
+  const zoneMessage = document.getElementById('message-livre');
+
+  if (!zoneMessage) {
+    return;
+  }
+
+  zoneMessage.textContent = message;
+  zoneMessage.className = `message ${type}`.trim();
 }
 
+function construireLienLivre(livreId) {
+  const urlActuelle = new URL(window.location.href);
+
+  return `${urlActuelle.origin}${urlActuelle.pathname.replace(
+    'administration.html',
+    'livre.html'
+  )}?id=${encodeURIComponent(livreId)}`;
+}
+
+/* =========================================================
+   COMPTES UTILISATEURS
+   ========================================================= */
+
 async function chargerComptesEnAttente() {
+  const tbody = document.querySelector('#table-comptes tbody');
+
+  if (!tbody) {
+    return;
+  }
+
   const { data, error } = await supabase
     .from('profiles')
     .select(`
@@ -106,17 +147,15 @@ async function chargerComptesEnAttente() {
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
-  const tbody = document.querySelector('#table-comptes tbody');
-
-  if (!tbody) return;
-
   if (error) {
-    console.error('Erreur comptes :', error);
+    console.error('Erreur comptes en attente :', error);
+
     tbody.innerHTML = `
       <tr>
-        <td colspan="5">Impossible de charger les comptes en attente.</td>
+        <td colspan="5">Impossible de charger les comptes.</td>
       </tr>
     `;
+
     return;
   }
 
@@ -128,25 +167,38 @@ async function chargerComptesEnAttente() {
         <td colspan="5">Aucun compte en attente de validation.</td>
       </tr>
     `;
+
     return;
   }
 
   for (const profil of data) {
-    const nom = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+    const nomComplet =
+      `${profil.first_name || ''} ${profil.last_name || ''}`.trim() || '-';
 
     tbody.insertAdjacentHTML(
       'beforeend',
       `
         <tr>
-          <td>${echapperHtml(nom || '-')}</td>
+          <td>${echapperHtml(nomComplet)}</td>
           <td>${echapperHtml(profil.email)}</td>
           <td>${echapperHtml(profil.carte_identite || '-')}</td>
           <td>${echapperHtml(profil.carte_etudiant || '-')}</td>
           <td>
-            <button class="btn-accept" data-action="activate-account" data-id="${profil.id}">
+            <button
+              type="button"
+              class="btn-accept"
+              data-action="accepter-compte"
+              data-id="${profil.id}"
+            >
               Accepter
             </button>
-            <button class="btn-reject" data-action="reject-account" data-id="${profil.id}">
+
+            <button
+              type="button"
+              class="btn-reject"
+              data-action="refuser-compte"
+              data-id="${profil.id}"
+            >
               Refuser
             </button>
           </td>
@@ -159,7 +211,9 @@ async function chargerComptesEnAttente() {
 async function gererCompte(event) {
   const bouton = event.target.closest('button[data-action]');
 
-  if (!bouton) return;
+  if (!bouton) {
+    return;
+  }
 
   const profilId = bouton.dataset.id;
   const action = bouton.dataset.action;
@@ -167,19 +221,23 @@ async function gererCompte(event) {
   bouton.disabled = true;
 
   try {
-    if (action === 'activate-account') {
+    if (action === 'accepter-compte') {
       const { error } = await supabase
         .from('profiles')
         .update({ status: 'active' })
         .eq('id', profilId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      alert('Compte accepté et activé.');
+      alert('Compte utilisateur accepté et activé.');
     }
 
-    if (action === 'reject-account') {
-      const confirmation = confirm('Refuser ce compte ?');
+    if (action === 'refuser-compte') {
+      const confirmation = confirm(
+        'Voulez-vous vraiment refuser ce compte utilisateur ?'
+      );
 
       if (!confirmation) {
         bouton.disabled = false;
@@ -191,25 +249,38 @@ async function gererCompte(event) {
         .update({ status: 'rejected' })
         .eq('id', profilId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      alert('Compte refusé.');
+      alert('Compte utilisateur refusé.');
     }
 
     await chargerComptesEnAttente();
   } catch (error) {
-    console.error('Erreur validation compte :', error);
+    console.error('Erreur compte utilisateur :', error);
     alert("Impossible de modifier l'état du compte.");
   } finally {
     bouton.disabled = false;
   }
 }
 
+/* =========================================================
+   EMPRUNTS, DATE DE RETOUR ET PENALITES
+   ========================================================= */
+
 async function chargerDemandes() {
+  const tbody = document.querySelector('#table-demandes tbody');
+
+  if (!tbody) {
+    return;
+  }
+
   const { data, error } = await supabase
     .from('emprunts')
     .select(`
       id,
+      user_id,
       livre_id,
       statut,
       date_demande,
@@ -218,6 +289,7 @@ async function chargerDemandes() {
       date_retour_reel,
       penalite,
       statut_penalite,
+      note_admin,
       profiles (
         first_name,
         last_name,
@@ -230,17 +302,15 @@ async function chargerDemandes() {
     `)
     .order('date_demande', { ascending: false });
 
-  const tbody = document.querySelector('#table-demandes tbody');
-
-  if (!tbody) return;
-
   if (error) {
-    console.error('Erreur emprunts :', error);
+    console.error('Erreur chargement emprunts :', error);
+
     tbody.innerHTML = `
       <tr>
         <td colspan="7">Impossible de charger les emprunts.</td>
       </tr>
     `;
+
     return;
   }
 
@@ -249,9 +319,10 @@ async function chargerDemandes() {
   if (!data || data.length === 0) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="7">Aucune demande d'emprunt.</td>
+        <td colspan="7">Aucune demande ou aucun emprunt enregistré.</td>
       </tr>
     `;
+
     return;
   }
 
@@ -259,28 +330,46 @@ async function chargerDemandes() {
     const profil = emprunt.profiles;
     const livre = emprunt.livres;
 
-    const utilisateur =
+    const nomUtilisateur =
       `${profil?.first_name || ''} ${profil?.last_name || ''}`.trim() ||
       profil?.email ||
       'Utilisateur inconnu';
 
+    const dateInput = dateVersInput(emprunt.date_retour_prevu);
+    const montantPenalite = Number(emprunt.penalite || 0);
+
+    let statutAffiche = emprunt.statut;
+    let classeStatut = emprunt.statut;
+
+    const estEnRetard =
+      emprunt.statut === 'approved' &&
+      emprunt.date_retour_prevu &&
+      new Date(emprunt.date_retour_prevu) < new Date();
+
+    if (estEnRetard) {
+      statutAffiche = 'overdue';
+      classeStatut = 'overdue';
+    }
+
     let actions = '';
 
+    /* Demande pas encore acceptée */
     if (emprunt.statut === 'pending') {
       actions = `
         <label class="table-label">
-          Retour prévu
+          Date de retour choisie par admin
           <input
             type="date"
             class="input-date-retour"
             data-date-id="${emprunt.id}"
-            value="${dateDans14Jours()}"
+            value="${dateInput}"
           />
         </label>
 
         <button
+          type="button"
           class="btn-accept"
-          data-action="accept-loan"
+          data-action="accepter-emprunt"
           data-id="${emprunt.id}"
           data-livre-id="${emprunt.livre_id}"
         >
@@ -288,8 +377,9 @@ async function chargerDemandes() {
         </button>
 
         <button
+          type="button"
           class="btn-reject"
-          data-action="reject-loan"
+          data-action="refuser-emprunt"
           data-id="${emprunt.id}"
         >
           Refuser
@@ -297,11 +387,27 @@ async function chargerDemandes() {
       `;
     }
 
-    if (emprunt.statut === 'approved' || emprunt.statut === 'overdue') {
+    /* Emprunt accepté : date modifiable + retour */
+    if (emprunt.statut === 'approved') {
       actions = `
-        <p class="small-info">
-          Retour prévu : <strong>${formatDate(emprunt.date_retour_prevu)}</strong>
-        </p>
+        <label class="table-label">
+          Modifier date de retour
+          <input
+            type="date"
+            class="input-date-retour"
+            data-date-id="${emprunt.id}"
+            value="${dateInput}"
+          />
+        </label>
+
+        <button
+          type="button"
+          class="btn-return"
+          data-action="modifier-date"
+          data-id="${emprunt.id}"
+        >
+          Enregistrer date
+        </button>
 
         <label class="table-label">
           Pénalité (Ar)
@@ -311,13 +417,14 @@ async function chargerDemandes() {
             step="100"
             class="input-penalite"
             data-penalite-id="${emprunt.id}"
-            value="${Number(emprunt.penalite || 0)}"
+            value="${montantPenalite}"
           />
         </label>
 
         <button
+          type="button"
           class="btn-return"
-          data-action="return-loan"
+          data-action="livre-retourne"
           data-id="${emprunt.id}"
           data-livre-id="${emprunt.livre_id}"
         >
@@ -326,53 +433,68 @@ async function chargerDemandes() {
       `;
     }
 
-    if (emprunt.statut === 'returned' && Number(emprunt.penalite) > 0) {
+    /* Livre retourné et éventuellement pénalité */
+    if (emprunt.statut === 'returned') {
       actions = `
         <p class="small-info">
-          Pénalité : <strong>${Number(emprunt.penalite).toLocaleString('fr-FR')} Ar</strong>
+          Rendu le : <strong>${formatDate(emprunt.date_retour_reel)}</strong>
         </p>
-
-        <p class="small-info">
-          Statut : <strong>${echapperHtml(emprunt.statut_penalite)}</strong>
-        </p>
-
-        ${
-          emprunt.statut_penalite !== 'paid'
-            ? `
-              <button
-                class="btn-accept"
-                data-action="pay-penalty"
-                data-id="${emprunt.id}"
-              >
-                Marquer payée
-              </button>
-            `
-            : ''
-        }
       `;
+
+      if (montantPenalite > 0) {
+        actions += `
+          <p class="small-info">
+            Pénalité : <strong>${montantPenalite.toLocaleString('fr-FR')} Ar</strong>
+          </p>
+
+          <p class="small-info">
+            Paiement : <strong>${echapperHtml(emprunt.statut_penalite)}</strong>
+          </p>
+        `;
+
+        if (emprunt.statut_penalite !== 'paid') {
+          actions += `
+            <button
+              type="button"
+              class="btn-accept"
+              data-action="penalite-payee"
+              data-id="${emprunt.id}"
+            >
+              Marquer payée
+            </button>
+          `;
+        }
+      } else {
+        actions += `
+          <p class="small-info">Aucune pénalité.</p>
+        `;
+      }
     }
 
+    /* Emprunt refusé */
     if (emprunt.statut === 'rejected') {
-      actions = '<span class="small-info">Demande refusée.</span>';
+      actions = `
+        <p class="small-info">Demande d’emprunt refusée.</p>
+      `;
     }
 
     tbody.insertAdjacentHTML(
       'beforeend',
       `
         <tr>
-          <td>${echapperHtml(utilisateur)}</td>
+          <td>${echapperHtml(nomUtilisateur)}</td>
           <td>${echapperHtml(livre?.titre || 'Livre introuvable')}</td>
           <td>${formatDate(emprunt.date_demande)}</td>
           <td>
-            <span class="badge badge-${echapperHtml(emprunt.statut)}">
-              ${echapperHtml(emprunt.statut)}
+            <span class="badge badge-${classeStatut}">
+              ${echapperHtml(statutAffiche)}
             </span>
           </td>
           <td>${formatDate(emprunt.date_retour_prevu)}</td>
           <td>
             ${
-              Number(emprunt.penalite) > 0
-                ? `${Number(emprunt.penalite).toLocaleString('fr-FR')} Ar`
+              montantPenalite > 0
+                ? `${montantPenalite.toLocaleString('fr-FR')} Ar`
                 : '-'
             }
           </td>
@@ -386,7 +508,9 @@ async function chargerDemandes() {
 async function gererEmprunt(event) {
   const bouton = event.target.closest('button[data-action]');
 
-  if (!bouton) return;
+  if (!bouton) {
+    return;
+  }
 
   const action = bouton.dataset.action;
   const empruntId = bouton.dataset.id;
@@ -395,15 +519,18 @@ async function gererEmprunt(event) {
   bouton.disabled = true;
 
   try {
-    if (action === 'accept-loan') {
-      const inputDate = document.querySelector(
-        `.input-date-retour[data-date-id="${empruntId}"]`
-      );
+    const inputDate = document.querySelector(
+      `.input-date-retour[data-date-id="${empruntId}"]`
+    );
 
-      const dateRetourPrevu = convertirDateInput(inputDate?.value);
+    const dateRetourPrevu = convertirDateInput(inputDate?.value);
 
+    /* Admin accepte l'emprunt et choisit la date de retour */
+    if (action === 'accepter-emprunt') {
       if (!dateRetourPrevu) {
-        throw new Error('Choisissez une date de retour prévue.');
+        throw new Error(
+          "Vous devez choisir une date de retour avant d'accepter l'emprunt."
+        );
       }
 
       const { error: erreurEmprunt } = await supabase
@@ -411,24 +538,34 @@ async function gererEmprunt(event) {
         .update({
           statut: 'approved',
           date_emprunt: new Date().toISOString(),
-          date_retour_prevu: dateRetourPrevu
+          date_retour_prevu: dateRetourPrevu,
+          note_admin: 'Emprunt accepté par administrateur.'
         })
         .eq('id', empruntId);
 
-      if (erreurEmprunt) throw erreurEmprunt;
+      if (erreurEmprunt) {
+        throw erreurEmprunt;
+      }
 
       const { error: erreurLivre } = await supabase
         .from('livres')
         .update({ disponible: false })
         .eq('id', livreId);
 
-      if (erreurLivre) throw erreurLivre;
+      if (erreurLivre) {
+        throw erreurLivre;
+      }
 
-      alert('Emprunt accepté. Le livre est maintenant indisponible.');
+      alert(
+        "Emprunt accepté. La date de retour est enregistrée et le livre devient indisponible."
+      );
     }
 
-    if (action === 'reject-loan') {
-      const confirmation = confirm("Refuser cette demande d'emprunt ?");
+    /* Admin refuse une demande */
+    if (action === 'refuser-emprunt') {
+      const confirmation = confirm(
+        "Voulez-vous vraiment refuser cette demande d'emprunt ?"
+      );
 
       if (!confirmation) {
         bouton.disabled = false;
@@ -437,15 +574,42 @@ async function gererEmprunt(event) {
 
       const { error } = await supabase
         .from('emprunts')
-        .update({ statut: 'rejected' })
+        .update({
+          statut: 'rejected',
+          note_admin: 'Demande refusée par administrateur.'
+        })
         .eq('id', empruntId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      alert('Demande refusée.');
+      alert('Demande d’emprunt refusée.');
     }
 
-    if (action === 'return-loan') {
+    /* Admin peut modifier la date de retour après acceptation */
+    if (action === 'modifier-date') {
+      if (!dateRetourPrevu) {
+        throw new Error('Choisissez une date de retour valide.');
+      }
+
+      const { error } = await supabase
+        .from('emprunts')
+        .update({
+          date_retour_prevu: dateRetourPrevu,
+          note_admin: 'Date de retour modifiée par administrateur.'
+        })
+        .eq('id', empruntId);
+
+      if (error) {
+        throw error;
+      }
+
+      alert('Date de retour modifiée avec succès.');
+    }
+
+    /* Retour livre + pénalité choisie par admin */
+    if (action === 'livre-retourne') {
       const inputPenalite = document.querySelector(
         `.input-penalite[data-penalite-id="${empruntId}"]`
       );
@@ -462,24 +626,35 @@ async function gererEmprunt(event) {
           statut: 'returned',
           date_retour_reel: new Date().toISOString(),
           penalite,
-          statut_penalite: penalite > 0 ? 'pending' : 'none'
+          statut_penalite: penalite > 0 ? 'pending' : 'none',
+          note_admin:
+            penalite > 0
+              ? `Livre retourné avec une pénalité de ${penalite} Ar.`
+              : 'Livre retourné sans pénalité.'
         })
         .eq('id', empruntId);
 
-      if (erreurEmprunt) throw erreurEmprunt;
+      if (erreurEmprunt) {
+        throw erreurEmprunt;
+      }
 
       const { error: erreurLivre } = await supabase
         .from('livres')
         .update({ disponible: true })
         .eq('id', livreId);
 
-      if (erreurLivre) throw erreurLivre;
+      if (erreurLivre) {
+        throw erreurLivre;
+      }
 
-      alert('Retour enregistré. Le livre est disponible de nouveau.');
+      alert('Retour enregistré. Le livre est à nouveau disponible.');
     }
 
-    if (action === 'pay-penalty') {
-      const confirmation = confirm('Confirmer le paiement de la pénalité ?');
+    /* Admin confirme le paiement d'une pénalité */
+    if (action === 'penalite-payee') {
+      const confirmation = confirm(
+        'Confirmez-vous que cette pénalité a été payée ?'
+      );
 
       if (!confirmation) {
         bouton.disabled = false;
@@ -488,10 +663,15 @@ async function gererEmprunt(event) {
 
       const { error } = await supabase
         .from('emprunts')
-        .update({ statut_penalite: 'paid' })
+        .update({
+          statut_penalite: 'paid',
+          note_admin: 'Pénalité payée.'
+        })
         .eq('id', empruntId);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       alert('Pénalité marquée comme payée.');
     }
@@ -506,6 +686,10 @@ async function gererEmprunt(event) {
   }
 }
 
+/* =========================================================
+   LIVRES ET QR CODES
+   ========================================================= */
+
 async function ajouterLivre(event) {
   event.preventDefault();
 
@@ -516,9 +700,14 @@ async function ajouterLivre(event) {
   const categorie = document.getElementById('livre-categorie').value.trim();
 
   if (!titre || !numeroRef) {
-    alert('Le titre et la référence unique sont obligatoires.');
+    afficherMessageLivre(
+      'Le titre et la référence unique sont obligatoires.',
+      'error'
+    );
     return;
   }
+
+  afficherMessageLivre('Ajout du livre en cours...');
 
   const { error } = await supabase
     .from('livres')
@@ -535,36 +724,51 @@ async function ajouterLivre(event) {
     console.error('Erreur ajout livre :', error);
 
     if (error.message.toLowerCase().includes('duplicate')) {
-      alert('Cette référence existe déjà. Choisis une référence unique.');
+      afficherMessageLivre(
+        'Cette référence existe déjà. Entrez une référence unique.',
+        'error'
+      );
       return;
     }
 
-    alert("Impossible d'ajouter ce livre.");
+    afficherMessageLivre(
+      "Impossible d'ajouter ce livre. Vérifiez les informations.",
+      'error'
+    );
     return;
   }
 
   event.target.reset();
+
+  afficherMessageLivre(
+    'Livre ajouté avec succès. Vous pouvez maintenant créer son QR code.',
+    'success'
+  );
+
   await chargerLivres();
-  alert('Livre ajouté. Tu peux maintenant générer et imprimer son QR code.');
 }
 
 async function chargerLivres() {
+  const tbody = document.querySelector('#table-livres tbody');
+
+  if (!tbody) {
+    return;
+  }
+
   const { data, error } = await supabase
     .from('livres')
     .select('*')
     .order('created_at', { ascending: false });
 
-  const tbody = document.querySelector('#table-livres tbody');
-
-  if (!tbody) return;
-
   if (error) {
-    console.error('Erreur livres :', error);
+    console.error('Erreur chargement livres :', error);
+
     tbody.innerHTML = `
       <tr>
         <td colspan="7">Impossible de charger les livres.</td>
       </tr>
     `;
+
     return;
   }
 
@@ -576,10 +780,16 @@ async function chargerLivres() {
         <td colspan="7">Aucun livre enregistré.</td>
       </tr>
     `;
+
     return;
   }
 
   for (const livre of data) {
+    const disponibilite = livre.disponible ? 'Disponible' : 'Indisponible';
+    const classeDisponibilite = livre.disponible
+      ? 'badge-active'
+      : 'badge-rejected';
+
     tbody.insertAdjacentHTML(
       'beforeend',
       `
@@ -589,25 +799,27 @@ async function chargerLivres() {
           <td>${echapperHtml(livre.numero_ref || '-')}</td>
           <td>${echapperHtml(livre.categorie || '-')}</td>
           <td>
-            <span class="badge ${livre.disponible ? 'badge-active' : 'badge-rejected'}">
-              ${livre.disponible ? 'Disponible' : 'Indisponible'}
+            <span class="badge ${classeDisponibilite}">
+              ${disponibilite}
             </span>
           </td>
           <td>
             <button
+              type="button"
               class="btn-return"
-              data-action="show-qr"
+              data-action="afficher-qr"
               data-id="${livre.id}"
               data-titre="${encodeURIComponent(livre.titre)}"
-              data-ref="${encodeURIComponent(livre.numero_ref || '')}"
+              data-reference="${encodeURIComponent(livre.numero_ref || '')}"
             >
-              Afficher QR
+              QR code
             </button>
           </td>
           <td>
             <button
+              type="button"
               class="btn-delete"
-              data-action="delete-book"
+              data-action="supprimer-livre"
               data-id="${livre.id}"
             >
               Supprimer
@@ -622,177 +834,12 @@ async function chargerLivres() {
 async function gererLivre(event) {
   const bouton = event.target.closest('button[data-action]');
 
-  if (!bouton) return;
+  if (!bouton) {
+    return;
+  }
 
   const action = bouton.dataset.action;
+  const livreId = bouton.dataset.id;
 
-  if (action === 'show-qr') {
-    const titre = decodeURIComponent(bouton.dataset.titre || '');
-    const reference = decodeURIComponent(bouton.dataset.ref || '');
-    afficherQr(bouton.dataset.id, titre, reference);
-    return;
-  }
-
-  if (action === 'delete-book') {
-    const confirmation = confirm(
-      'Voulez-vous supprimer définitivement ce livre ?'
-    );
-
-    if (!confirmation) return;
-
-    bouton.disabled = true;
-
-    const { error } = await supabase
-      .from('livres')
-      .delete()
-      .eq('id', bouton.dataset.id);
-
-    if (error) {
-      console.error('Erreur suppression :', error);
-      alert(
-        "Impossible de supprimer ce livre. Il est peut-être lié à un emprunt."
-      );
-      bouton.disabled = false;
-      return;
-    }
-
-    await chargerLivres();
-  }
-}
-
-function afficherQr(livreId, titre, reference) {
-  const modal = document.getElementById('modal-qr');
-  const qrContainer = document.getElementById('qrcode-container');
-  const qrTitre = document.getElementById('qr-titre');
-  const qrReference = document.getElementById('qr-reference');
-
-  if (!modal || !qrContainer || typeof QRCode === 'undefined') {
-    alert("La bibliothèque de QR code n'est pas chargée.");
-    return;
-  }
-
-  qrTitre.textContent = titre || 'QR code du livre';
-  qrReference.textContent = reference
-    ? `Référence : ${reference}`
-    : 'Référence non renseignée';
-
-  qrContainer.innerHTML = '';
-
-  new QRCode(qrContainer, {
-    text: construireLienLivre(livreId),
-    width: 260,
-    height: 260,
-    colorDark: '#0b2d45',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.H
-  });
-
-  modal.dataset.titreLivre = titre || 'livre';
-  modal.dataset.referenceLivre = reference || 'reference';
-  modal.classList.remove('hidden');
-}
-
-function fermerQr() {
-  document.getElementById('modal-qr')?.classList.add('hidden');
-  document.getElementById('qrcode-container').replaceChildren();
-}
-
-function telechargerQr() {
-  const imageQr = document.querySelector('#qrcode-container img');
-
-  if (!imageQr) {
-    alert("Le QR code n'est pas encore généré.");
-    return;
-  }
-
-  const modal = document.getElementById('modal-qr');
-  const titre = (modal?.dataset.titreLivre || 'livre')
-    .replace(/[^a-z0-9]/gi, '_')
-    .toLowerCase();
-
-  const lien = document.createElement('a');
-  lien.href = imageQr.src;
-  lien.download = `qr_code_${titre}.png`;
-  document.body.appendChild(lien);
-  lien.click();
-  lien.remove();
-}
-
-function imprimerQr() {
-  const imageQr = document.querySelector('#qrcode-container img');
-  const titre = document.getElementById('qr-titre')?.textContent || 'Livre';
-  const reference = document.getElementById('qr-reference')?.textContent || '';
-
-  if (!imageQr) {
-    alert("Le QR code n'est pas encore généré.");
-    return;
-  }
-
-  const fenetre = window.open('', '_blank', 'width=700,height=700');
-
-  if (!fenetre) {
-    alert("Le navigateur a bloqué la fenêtre d'impression.");
-    return;
-  }
-
-  fenetre.document.write(`
-    <!DOCTYPE html>
-    <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <title>QR code - ${echapperHtml(titre)}</title>
-        <style>
-          body {
-            margin: 0;
-            padding: 35px;
-            color: #0b2d45;
-            font-family: Arial, sans-serif;
-            text-align: center;
-          }
-
-          h1 {
-            margin-bottom: 8px;
-            font-size: 22px;
-          }
-
-          p {
-            color: #465b6a;
-          }
-
-          img {
-            width: 300px;
-            height: 300px;
-            margin: 25px auto;
-            image-rendering: pixelated;
-          }
-
-          .instruction {
-            margin-top: 20px;
-            font-size: 13px;
-          }
-
-          @media print {
-            body {
-              padding: 10px;
-            }
-          }
-        </style>
-      </head>
-      <body>
-        <h1>${echapperHtml(titre)}</h1>
-        <p>${echapperHtml(reference)}</p>
-        <img src="${imageQr.src}" alt="QR code du livre">
-        <p class="instruction">
-          Scannez ce QR code pour consulter ce livre et demander un emprunt.
-        </p>
-      </body>
-    </html>
-  `);
-
-  fenetre.document.close();
-  fenetre.focus();
-
-  setTimeout(() => {
-    fenetre.print();
-  }, 400);
-                    }
+  if (action === 'afficher-qr') {
+    const titre = decodeURIComponent(bouto
