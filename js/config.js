@@ -1,5 +1,5 @@
-export const SUPABASE_URL = 'https://poly.supabase.co'
-export const SUPABASE_KEY = 'poly123poly123'
+export const SUPABASE_URL = 'https://ylcezajxsqhuwdhocvqt.supabase.co'
+export const SUPABASE_KEY = 'sb_publishable_VkmNVJEfohGbSBg7HZzQ0w_3R6QTPNQ'
 export const SITE_URL = window.location.origin
 
 export const LOAN_DAYS = 14
