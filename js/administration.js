@@ -601,4 +601,4 @@ function imprimerQR() {
   fenetre.document.close();
 
   setTimeout(() => fenetre.print(), 400);
-      }
+         }
