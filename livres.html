@@ -2,151 +2,178 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Détail du livre</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Livre | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Scanner QR code + code-barres -->
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
+
 <body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
-  <h1>Détail du livre</h1>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
 
-  <div style="margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 6px;">
-    <h3>Emprunter un livre par référence</h3>
-    <label>
-      Référence du livre (ou scan QR)
-      <input type="text" id="livre-ref-input" placeholder="Ex: REF12345" />
-    </label>
-    <button type="button" id="btn-scan-livre">Scanner QR livre</button>
-    <button type="button" id="btn-emprunter-ref">Emprunter ce livre</button>
-    <div id="message-ref" style="margin-top: 8px;"></div>
-  </div>
+        <a href="espace.html" id="lien-espace" class="hidden">
+          Mon espace
+        </a>
 
-  <div id="contenu-livre">Chargement...</div>
+        <a href="administration.html" id="lien-admin" class="hidden">
+          Administration
+        </a>
+      </nav>
+
+      <div class="nav-buttons">
+        <span id="nom-utilisateur" class="nom-utilisateur hidden"></span>
+
+        <a href="connexion.html" id="btn-connexion" class="btn-login">
+          Connexion
+        </a>
+
+        <button id="btn-deconnexion" class="btn-logout hidden" type="button">
+          Déconnexion
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-content">
+    <section class="hero-accueil">
+      <p class="eyebrow">Bibliothèque physique</p>
+      <h1>Scanner un livre</h1>
+      <p>
+        Scannez le QR code ou le code-barres collé sur le livre physique
+        pour afficher immédiatement ses informations.
+      </p>
+    </section>
+
+    <section class="admin-card">
+      <h2>Scanner avec la caméra</h2>
+
+      <div class="scan-actions">
+        <button id="btn-demarrer-scan" type="button">
+          Ouvrir la caméra
+        </button>
+
+        <button id="btn-arreter-scan" type="button" class="btn-reject hidden">
+          Fermer la caméra
+        </button>
+      </div>
+
+      <div id="lecteur-qr" class="lecteur-qr hidden"></div>
+
+      <p class="small-info">
+        Autorisez l’accès à la caméra. Utilisez de préférence Google Chrome
+        sur téléphone. Le QR code imprimé par l’administration ouvre la fiche
+        du livre automatiquement.
+      </p>
+    </section>
+
+    <section class="admin-card">
+      <h2>Rechercher par référence</h2>
+
+      <label>
+        Référence du livre
+        <input
+          id="livre-ref-input"
+          type="text"
+          placeholder="Exemple : ESP-MATH-001"
+        />
+      </label>
+
+      <button id="btn-rechercher-ref" type="button">
+        Afficher le livre
+      </button>
+
+      <p id="message-ref" class="message"></p>
+    </section>
+
+    <section id="contenu-livre" class="admin-card hidden"></section>
+  </main>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
-    import { afficherLivre } from './js/livre.js';
-    import { supabase } from './js/config.js';
-    import { getUtilisateurCourant } from './js/auth.js';
+    import { afficherLivre, ouvrirLivreParReference } from './js/livre.js';
+    import { ouvrirScannerQr, fermerScannerQr } from './js/scanner.js';
 
-    initMenu();
-    afficherLivre();
+    await initMenu();
+    await afficherLivre();
 
-    // --- Emprunt par référence / QR ---
-    const btnScanLivre = document.getElementById('btn-scan-livre');
-    const btnEmprunterRef = document.getElementById('btn-emprunter-ref');
+    const lecteurQr = document.getElementById('lecteur-qr');
+    const btnDemarrer = document.getElementById('btn-demarrer-scan');
+    const btnArreter = document.getElementById('btn-arreter-scan');
     const messageRef = document.getElementById('message-ref');
 
-    if (btnScanLivre && 'mediaDevices' in navigator) {
-      btnScanLivre.addEventListener('click', async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-          });
+    btnDemarrer.addEventListener('click', async () => {
+      lecteurQr.classList.remove('hidden');
+      btnDemarrer.classList.add('hidden');
+      btnArreter.classList.remove('hidden');
 
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.setAttribute('playsinline', true);
-          video.style.position = 'fixed';
-          video.style.top = '0';
-          video.style.left = '0';
-          video.style.width = '100%';
-          video.style.height = '100%';
-          video.style.background = '#000';
-          video.style.zIndex = '9999';
-          document.body.appendChild(video);
+      messageRef.textContent = 'Caméra ouverte. Placez le QR code dans le cadre.';
+      messageRef.className = 'message success';
 
-          await video.play();
+      await ouvrirScannerQr({
+        lecteurId: 'lecteur-qr',
 
-          setTimeout(() => {
-            alert(
-              "Pointez la caméra sur le QR code du livre.
-" +
-              "Ensuite, saisissez manuellement la référence dans le champ ci-dessus."
-            );
-            stream.getTracks().forEach(track => track.stop());
-            video.remove();
-          }, 5000);
-        } catch (err) {
-          alert("Impossible d'accéder à la caméra : " + err.message);
-        }
-      });
-    } else if (btnScanLivre) {
-      btnScanLivre.style.display = 'none';
-    }
+        onSuccess: async (valeurScannee) => {
+          lecteurQr.classList.add('hidden');
+          btnArreter.classList.add('hidden');
+          btnDemarrer.classList.remove('hidden');
 
-    if (btnEmprunterRef) {
-      btnEmprunterRef.addEventListener('click', async () => {
-        if (!messageRef) return;
-        messageRef.textContent = '';
-        messageRef.style.color = 'black';
+          // QR code généré par le site : contient livre.html?id=UUID
+          if (valeurScannee.includes('livre.html?id=')) {
+            window.location.href = valeurScannee;
+            return;
+          }
 
-        const ref = document.getElementById('livre-ref-input').value.trim();
-        if (!ref) {
-          messageRef.textContent = 'Veuillez saisir une référence.';
-          messageRef.style.color = 'red';
-          return;
-        }
+          // Si le QR/code-barres contient seulement la référence du livre
+          document.getElementById('livre-ref-input').value = valeurScannee;
 
-        const info = await getUtilisateurCourant();
-        if (!info) {
-          messageRef.textContent = 'Vous devez vous connecter pour emprunter un livre.';
-          messageRef.style.color = 'red';
-          return;
-        }
+          messageRef.textContent = `Code scanné : ${valeurScannee}`;
+          messageRef.className = 'message success';
 
-        const { user, profil } = info;
-        if (!profil || profil.status !== 'active') {
-          messageRef.textContent = "Votre compte n'est pas encore activé par l'administrateur.";
-          messageRef.style.color = 'red';
-          return;
-        }
+          await ouvrirLivreParReference(valeurScannee);
+        },
 
-        const { data: livre, error: searchError } = await supabase
-          .from('livres')
-          .select('id, titre, disponible')
-          .eq('numero_ref', ref)
-          .single();
+        onError: (error) => {
+          lecteurQr.classList.add('hidden');
+          btnArreter.classList.add('hidden');
+          btnDemarrer.classList.remove('hidden');
 
-        if (searchError || !livre) {
-          messageRef.textContent = 'Aucun livre trouvé avec cette référence.';
-          messageRef.style.color = 'red';
-          return;
-        }
-
-        if (!livre.disponible) {
-          messageRef.textContent = 'Ce livre n'est pas disponible pour le moment.';
-          messageRef.style.color = 'red';
-          return;
-        }
-
-        const { error: insertError } = await supabase.from('emprunts').insert({
-          user_id: user.id,
-          livre_id: livre.id,
-          statut: 'pending',
-          date_retour_prevu: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-        });
-
-        if (insertError) {
-          console.error(insertError);
-          messageRef.textContent = "Erreur lors de l'envoi de la demande d'emprunt.";
-          messageRef.style.color = 'red';
-        } else {
           messageRef.textContent =
-            `Demande d'emprunt envoyée pour "${livre.titre}". En attente de validation.`;
-          messageRef.style.color = 'green';
-          document.getElementById('livre-ref-input').value = '';
+            "Impossible d'ouvrir la caméra. Vérifiez l'autorisation caméra et utilisez HTTPS ou GitHub Pages.";
+          messageRef.className = 'message error';
+
+          console.error(error);
         }
       });
-    }
+    });
+
+    btnArreter.addEventListener('click', async () => {
+      await fermerScannerQr();
+
+      lecteurQr.classList.add('hidden');
+      btnArreter.classList.add('hidden');
+      btnDemarrer.classList.remove('hidden');
+
+      messageRef.textContent = 'Scanner fermé.';
+      messageRef.className = 'message';
+    });
+
+    document
+      .getElementById('btn-rechercher-ref')
+      .addEventListener('click', async () => {
+        const reference = document
+          .getElementById('livre-ref-input')
+          .value.trim();
+
+        await ouvrirLivreParReference(reference);
+      });
   </script>
 </body>
-</html>
+  </html>
