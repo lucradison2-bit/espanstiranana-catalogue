@@ -4,17 +4,20 @@
   <meta charset="UTF-8" />
   <title>Inscription</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    form { max-width: 400px; margin: auto; }
-    label { display:block; margin-top:10px; }
-    input { width:100%; padding:8px; margin-top:4px; }
-    button { margin-top:15px; padding:10px 20px; }
-    .error { color:red; margin-top:10px; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="catalogue.html">Catalogue</a>
+    <a href="connexion.html" id="btn-connexion">Connexion</a>
+    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
+    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
+    <span id="span-nom-utilisateur"></span>
+  </nav>
+
   <h1>Inscription</h1>
+
   <form id="form-inscription">
     <label>
       Prénom
@@ -44,6 +47,7 @@
     <label>
       Numéro de carte étudiant (facultatif, lettres/chiffres ou QR)
       <input type="text" id="carte_etudiant" />
+      <button type="button" id="btn-scan-carte">Scanner QR carte étudiant</button>
     </label>
 
     <button type="submit">S'inscrire</button>
@@ -55,7 +59,10 @@
   </p>
 
   <script type="module">
-    import { inscrireUtilisateur } from './auth.js';
+    import { initMenu } from './js/commun.js';
+    import { inscrireUtilisateur } from './js/auth.js';
+
+    initMenu();
 
     const form = document.getElementById('form-inscription');
     const message = document.getElementById('message');
@@ -87,6 +94,46 @@
         message.textContent = err.message || "Erreur lors de l'inscription.";
       }
     });
+
+    // --- Scan QR carte étudiant ---
+    const btnScanCarte = document.getElementById('btn-scan-carte');
+    if (btnScanCarte && 'mediaDevices' in navigator) {
+      btnScanCarte.addEventListener('click', async () => {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'environment' }
+          });
+
+          const video = document.createElement('video');
+          video.srcObject = stream;
+          video.setAttribute('playsinline', true);
+          video.style.position = 'fixed';
+          video.style.top = '0';
+          video.style.left = '0';
+          video.style.width = '100%';
+          video.style.height = '100%';
+          video.style.background = '#000';
+          video.style.zIndex = '9999';
+          document.body.appendChild(video);
+
+          await video.play();
+
+          setTimeout(() => {
+            alert(
+              "Pointez la caméra sur le QR code de la carte étudiant.
+" +
+              "Ensuite, saisissez manuellement le code affiché dans le champ 'Numéro de carte étudiant'."
+            );
+            stream.getTracks().forEach(track => track.stop());
+            video.remove();
+          }, 5000);
+        } catch (err) {
+          alert("Impossible d'accéder à la caméra : " + err.message);
+        }
+      });
+    } else if (btnScanCarte) {
+      btnScanCarte.style.display = 'none';
+    }
   </script>
 </body>
 </html>
