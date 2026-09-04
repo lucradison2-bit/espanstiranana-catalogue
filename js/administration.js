@@ -3,12 +3,39 @@ import { supabase } from './config.js';
 import { verifierAdmin } from './commun.js';
 
 export async function initAdministration() {
-  const ok = await verifierAdmin();
-  if (!ok) return;
+  const estAdmin = await verifierAdmin();
 
-  document.getElementById('contenu-admin').style.display = 'block';
-  chargerDemandes();
-  chargerLivres();
+  if (!estAdmin) {
+    return;
+  }
+
+  const contenuAdmin = document.getElementById('contenu-admin');
+
+  if (contenuAdmin) {
+    contenuAdmin.classList.remove('hidden');
+  }
+
+  await chargerDemandes();
+  await chargerLivres();
+  installerEvenementsAdmin();
+}
+
+function installerEvenementsAdmin() {
+  const formulaire = document.getElementById('form-ajout-livre');
+  const demandes = document.querySelector('#table-demandes tbody');
+  const livres = document.querySelector('#table-livres tbody');
+
+  if (formulaire) {
+    formulaire.addEventListener('submit', ajouterLivre);
+  }
+
+  if (demandes) {
+    demandes.addEventListener('click', gererActionEmprunt);
+  }
+
+  if (livres) {
+    livres.addEventListener('click', gererActionLivre);
+  }
 }
 
 async function chargerDemandes() {
@@ -17,152 +44,156 @@ async function chargerDemandes() {
     .select(`
       id,
       statut,
-      livres ( titre, auteur ),
-      profiles ( first_name, last_name, email )
+      livre_id,
+      created_at,
+      profiles (
+        first_name,
+        last_name,
+        email
+      ),
+      livres (
+        titre,
+        auteur
+      )
     `)
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error(error);
+    console.error('Erreur demandes :', error);
+    alert("Erreur : impossible de charger les demandes d'emprunt.");
     return;
   }
 
   const tbody = document.querySelector('#table-demandes tbody');
+
   if (!tbody) return;
 
   tbody.innerHTML = '';
 
-  for (const d of data) {
-    const tr = document.createElement('tr');
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="4">Aucune demande d'emprunt pour le moment.</td>
+      </tr>
+    `;
+    return;
+  }
 
-    const user = d.profiles;
-    const livre = d.livres;
-    const nom = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || 'Inconnu';
+  for (const emprunt of data) {
+    const profil = emprunt.profiles;
+    const livre = emprunt.livres;
 
-    let actionsHtml = '';
+    const nomUtilisateur =
+      `${profil?.first_name || ''} ${profil?.last_name || ''}`.trim() ||
+      profil?.email ||
+      'Utilisateur inconnu';
 
-    if (d.statut === 'pending') {
-      actionsHtml = `
-        <button data-id="${d.id}" data-action="accept">Accepter</button>
-        <button data-id="${d.id}" data-action="reject">Refuser</button>
-      `;
-    } else if (d.statut === 'approved') {
-      actionsHtml = `
-        <button data-id="${d.id}" data-action="return">Retourner</button>
+    let actions = '';
+
+    if (emprunt.statut === 'pending') {
+      actions = `
+        <button class="btn-accept" data-action="accept" data-id="${emprunt.id}" data-livre-id="${emprunt.livre_id}">
+          Accepter
+        </button>
+        <button class="btn-reject" data-action="reject" data-id="${emprunt.id}">
+          Refuser
+        </button>
       `;
     }
 
-    tr.innerHTML = `
-      <td>${nom}</td>
-      <td>${livre?.titre || '???'}</td>
-      <td>${d.statut}</td>
-      <td>${actionsHtml}</td>
-    `;
+    if (emprunt.statut === 'approved') {
+      actions = `
+        <button class="btn-return" data-action="return" data-id="${emprunt.id}" data-livre-id="${emprunt.livre_id}">
+          Livre retourné
+        </button>
+      `;
+    }
 
-    tbody.appendChild(tr);
+    tbody.insertAdjacentHTML(
+      'beforeend',
+      `
+        <tr>
+          <td>${nomUtilisateur}</td>
+          <td>${livre?.titre || 'Livre introuvable'}</td>
+          <td><span class="badge badge-${emprunt.statut}">${emprunt.statut}</span></td>
+          <td>${actions}</td>
+        </tr>
+      `
+    );
   }
+}
 
-  tbody.addEventListener('click', async (e) => {
-    const btn = e.target.closest('button');
-    if (!btn) return;
-    const id = btn.dataset.id;
-    const action = btn.dataset.action;
+async function gererActionEmprunt(event) {
+  const bouton = event.target.closest('button[data-action]');
 
+  if (!bouton) return;
+
+  const action = bouton.dataset.action;
+  const empruntId = bouton.dataset.id;
+  const livreId = bouton.dataset.livreId;
+
+  bouton.disabled = true;
+
+  try {
     if (action === 'accept') {
-      await supabase
+      const { error: errorEmprunt } = await supabase
         .from('emprunts')
-        .update({ statut: 'approved', date_emprunt: new Date().toISOString() })
-        .eq('id', id);
+        .update({
+          statut: 'approved',
+          date_emprunt: new Date().toISOString()
+        })
+        .eq('id', empruntId);
 
-      const { data: emp } = await supabase
-        .from('emprunts')
-        .select('livre_id')
-        .eq('id', id)
-        .single();
+      if (errorEmprunt) throw errorEmprunt;
 
-      if (emp?.livre_id) {
-        await supabase
-          .from('livres')
-          .update({ disponible: false })
-          .eq('id', emp.livre_id);
-      }
-    } else if (action === 'reject') {
-      await supabase
+      const { error: errorLivre } = await supabase
+        .from('livres')
+        .update({ disponible: false })
+        .eq('id', livreId);
+
+      if (errorLivre) throw errorLivre;
+    }
+
+    if (action === 'reject') {
+      const { error } = await supabase
         .from('emprunts')
         .update({ statut: 'rejected' })
-        .eq('id', id);
-    } else if (action === 'return') {
-      // Marquer comme rendu et remettre le livre en disponible
-      await supabase
+        .eq('id', empruntId);
+
+      if (error) throw error;
+    }
+
+    if (action === 'return') {
+      const { error: errorEmprunt } = await supabase
         .from('emprunts')
         .update({
           statut: 'returned',
           date_retour_reel: new Date().toISOString()
         })
-        .eq('id', id);
+        .eq('id', empruntId);
 
-      const { data: emp } = await supabase
-        .from('emprunts')
-        .select('livre_id')
-        .eq('id', id)
-        .single();
+      if (errorEmprunt) throw errorEmprunt;
 
-      if (emp?.livre_id) {
-        await supabase
-          .from('livres')
-          .update({ disponible: true })
-          .eq('id', emp.livre_id);
-      }
+      const { error: errorLivre } = await supabase
+        .from('livres')
+        .update({ disponible: true })
+        .eq('id', livreId);
+
+      if (errorLivre) throw errorLivre;
     }
 
-    chargerDemandes();
-  });
+    await chargerDemandes();
+    await chargerLivres();
+  } catch (error) {
+    console.error('Erreur action emprunt :', error);
+    alert("L'action n'a pas pu être enregistrée.");
+  } finally {
+    bouton.disabled = false;
+  }
 }
 
-async function chargerLivres() {
-  const { data, error } = await supabase
-    .from('livres')
-    .select('*')
-    .order('titre');
-
-  if (error) {
-    console.error(error);
-    return;
-  }
-
-  const tbody = document.querySelector('#table-livres tbody');
-  if (!tbody) return;
-
-  tbody.innerHTML = '';
-
-  for (const l of data) {
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${l.titre}</td>
-      <td>${l.auteur || ''}</td>
-      <td>${l.numero_ref || ''}</td>
-      <td>${l.categorie || ''}</td>
-      <td>${l.disponible ? 'Oui' : 'Non'}</td>
-      <td>
-        <button data-id="${l.id}" data-action="delete">Supprimer</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  }
-
-  tbody.addEventListener('click', async (e) => {
-    const btn = e.target.closest('button');
-    if (!btn || btn.dataset.action !== 'delete') return;
-    const id = btn.dataset.id;
-    if (!confirm('Supprimer ce livre ?')) return;
-
-    await supabase.from('livres').delete().eq('id', id);
-    chargerLivres();
-  });
-}
-
-document.getElementById('form-ajout-livre')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
+async function ajouterLivre(event) {
+  event.preventDefault();
 
   const titre = document.getElementById('livre-titre').value.trim();
   const auteur = document.getElementById('livre-auteur').value.trim();
@@ -170,15 +201,107 @@ document.getElementById('form-ajout-livre')?.addEventListener('submit', async (e
   const numero_ref = document.getElementById('livre-ref').value.trim();
   const categorie = document.getElementById('livre-categorie').value.trim();
 
-  await supabase.from('livres').insert({
-    titre,
-    auteur: auteur || null,
-    resume: resume || null,
-    numero_ref: numero_ref || null,
-    categorie: categorie || null,
-    disponible: true
-  });
+  if (!titre) {
+    alert('Le titre du livre est obligatoire.');
+    return;
+  }
 
-  e.target.reset();
-  chargerLivres();
-});
+  const { error } = await supabase
+    .from('livres')
+    .insert({
+      titre,
+      auteur: auteur || null,
+      resume: resume || null,
+      numero_ref: numero_ref || null,
+      categorie: categorie || null,
+      disponible: true
+    });
+
+  if (error) {
+    console.error('Erreur ajout livre :', error);
+    alert("Erreur : impossible d'ajouter le livre.");
+    return;
+  }
+
+  event.target.reset();
+  await chargerLivres();
+  alert('Livre ajouté avec succès.');
+}
+
+async function chargerLivres() {
+  const { data, error } = await supabase
+    .from('livres')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erreur livres :', error);
+    return;
+  }
+
+  const tbody = document.querySelector('#table-livres tbody');
+
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  if (!data || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6">Aucun livre enregistré.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  for (const livre of data) {
+    const disponibilite = livre.disponible ? 'Disponible' : 'Indisponible';
+    const classeDisponibilite = livre.disponible ? 'badge-approved' : 'badge-rejected';
+
+    tbody.insertAdjacentHTML(
+      'beforeend',
+      `
+        <tr>
+          <td>${livre.titre}</td>
+          <td>${livre.auteur || '-'}</td>
+          <td>${livre.numero_ref || '-'}</td>
+          <td>${livre.categorie || '-'}</td>
+          <td><span class="badge ${classeDisponibilite}">${disponibilite}</span></td>
+          <td>
+            <button class="btn-delete" data-action="delete-book" data-id="${livre.id}">
+              Supprimer
+            </button>
+          </td>
+        </tr>
+      `
+    );
+  }
+}
+
+async function gererActionLivre(event) {
+  const bouton = event.target.closest('button[data-action="delete-book"]');
+
+  if (!bouton) return;
+
+  const livreId = bouton.dataset.id;
+
+  const confirmation = confirm('Voulez-vous vraiment supprimer ce livre ?');
+
+  if (!confirmation) return;
+
+  bouton.disabled = true;
+
+  const { error } = await supabase
+    .from('livres')
+    .delete()
+    .eq('id', livreId);
+
+  if (error) {
+    console.error('Erreur suppression livre :', error);
+    alert('Impossible de supprimer ce livre.');
+    bouton.disabled = false;
+    return;
+  }
+
+  await chargerLivres();
+      }
