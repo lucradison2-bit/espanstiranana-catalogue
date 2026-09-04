@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { verifierAdmin } from './commun.js';
+import { verifierAdmin, getUtilisateurCourant } from './commun.js';
 
 const echapper = (texte) => {
   const div = document.createElement('div');
@@ -38,6 +38,7 @@ function installerEvenements() {
   document.querySelector('#table-comptes tbody').onclick = actionCompte;
   document.querySelector('#table-emprunts tbody').onclick = actionEmprunt;
   document.querySelector('#table-livres tbody').onclick = actionLivre;
+  document.querySelector('#table-tous-membres tbody').onclick = actionMembre;
 
   document.querySelector('#form-ajout-livre').onsubmit = ajouterLivre;
 
@@ -393,8 +394,8 @@ async function actionEmprunt(event) {
       chargerLivres()
     ]);
   } catch (error) {
-    console.error(error);
-    alert("L'action a échoué.");
+    console.error('Erreur action emprunt:', error);
+    alert("L'action a échoué. Voir la console pour plus de détails.");
   }
 }
 
@@ -604,6 +605,10 @@ function imprimerQR() {
   setTimeout(() => fenetre.print(), 400);
 }
 
+/* =========================
+   TOUS LES MEMBRES + SUPPRESSION
+   ========================= */
+
 async function chargerTousMembres() {
   const tbody = document.querySelector('#table-tous-membres tbody');
 
@@ -627,36 +632,90 @@ async function chargerTousMembres() {
       `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
 
     tbody.insertAdjacentHTML(
-  'beforeend',
-  `
-  <tr>
-    <td>${echapper(nom)}</td>
-    <td>${echapper(profil.email)}</td>
-    <td>${echapper(profil.role)}</td>
-    <td>
-      <span class="badge badge-${
-        profil.status === 'active'
-          ? 'approved'
-          : profil.status === 'rejected'
-            ? 'rejected'
-            : 'pending'
-      }">
-        ${profil.status}
-      </span>
-    </td>
-    <td>${echapper(profil.carte_identite || '-')}</td>
-    <td>${echapper(profil.carte_etudiant || '-')}</td>
+      'beforeend',
+      `
+      <tr>
+        <td>${echapper(nom)}</td>
+        <td>${echapper(profil.email)}</td>
+        <td>${echapper(profil.role)}</td>
+        <td>
+          <span class="badge badge-${
+            profil.status === 'active'
+              ? 'approved'
+              : profil.status === 'rejected'
+                ? 'rejected'
+                : 'pending'
+          }">
+            ${profil.status}
+          </span>
+        </td>
+        <td>${echapper(profil.carte_identite || '-')}</td>
+        <td>${echapper(profil.carte_etudiant || '-')}</td>
 
-    <td>
-      <button
-        class="btn-delete"
-        data-action="supprimer-utilisateur"
-        data-id="${profil.id}"
-        data-email="${encodeURIComponent(profil.email)}"
-      >
-        Supprimer
-      </button>
-    </td>
-  </tr>
-  `
-);
+        <td>
+          <button
+            class="btn-delete"
+            data-action="supprimer-utilisateur"
+            data-id="${profil.id}"
+            data-email="${encodeURIComponent(profil.email)}"
+          >
+            Supprimer
+          </button>
+        </td>
+      </tr>
+      `
+    );
+  });
+}
+
+async function actionMembre(event) {
+  const bouton = event.target.closest('button[data-action]');
+
+  if (!bouton) return;
+
+  if (bouton.dataset.action === 'supprimer-utilisateur') {
+    const id = bouton.dataset.id;
+    const email = decodeURIComponent(bouton.dataset.email);
+
+    await actionSupprimerUtilisateur(id, email);
+  }
+}
+
+async function actionSupprimerUtilisateur(id, email) {
+  const info = await getUtilisateurCourant();
+
+  if (info?.user?.id === id) {
+    alert("Vous ne pouvez pas vous supprimer vous-même.");
+    return;
+  }
+
+  const message = `Voulez-vous vraiment supprimer l'utilisateur ${email} ?
+
+Cette action est irréversible et supprimera aussi ses emprunts.`;
+
+  if (!confirm(message)) return;
+
+  try {
+    // 1. Supprimer d'abord les emprunts liés
+    const { error: errEmprunts } = await supabase
+      .from('emprunts')
+      .delete()
+      .eq('user_id', id);
+
+    if (errEmprunts) throw errEmprunts;
+
+    // 2. Supprimer le profil (l'user Auth reste, mais le profil disparaît)
+    const { error: errProfil } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('id', id);
+
+    if (errProfil) throw errProfil;
+
+    await chargerTousMembres();
+    await chargerComptes();
+  } catch (error) {
+    console.error('Erreur suppression utilisateur:', error);
+    alert('Impossible de supprimer cet utilisateur. Voir la console.');
+  }
+}
