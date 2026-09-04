@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Livre | ESP Antsiranana</title>
+
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- Scanner QR code et code-barres -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 
@@ -19,15 +19,16 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
-
-        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
-        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
+        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
+        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
 
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
-        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
-        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <button id="btn-deconnexion" class="btn btn-danger hidden" type="button">
+          Déconnexion
+        </button>
       </div>
     </div>
   </header>
@@ -36,7 +37,7 @@
     <section class="page-header">
       <p class="eyebrow blue">Livre physique</p>
       <h1>Scanner ou rechercher un livre</h1>
-      <p>Scannez le QR code collé sur le livre physique ou entrez sa référence.</p>
+      <p>Scannez le QR code du livre ou entrez sa référence.</p>
     </section>
 
     <section class="content-card">
@@ -44,7 +45,12 @@
 
       <div class="button-row">
         <button id="btn-demarrer-scan" type="button">Ouvrir la caméra</button>
-        <button id="btn-arreter-scan" type="button" class="btn btn-danger hidden">
+
+        <button
+          id="btn-arreter-scan"
+          class="btn btn-danger hidden"
+          type="button"
+        >
           Fermer la caméra
         </button>
       </div>
@@ -52,7 +58,7 @@
       <div id="lecteur-qr" class="scanner-box hidden"></div>
 
       <p class="help-text">
-        Autorisez la caméra. Le site doit être ouvert avec GitHub Pages ou HTTPS pour que le scan puisse fonctionner.
+        Autorisez la caméra. Utilisez GitHub Pages ou une adresse HTTPS.
       </p>
     </section>
 
@@ -61,10 +67,17 @@
 
       <label>
         Référence du livre
-        <input id="livre-ref-input" type="text" placeholder="Exemple : ESP-INFO-001">
+        <input
+          id="livre-ref-input"
+          type="text"
+          placeholder="Exemple : ESP-INFO-001"
+        >
       </label>
 
-      <button id="btn-rechercher-ref" type="button">Afficher le livre</button>
+      <button id="btn-rechercher-ref" type="button">
+        Afficher le livre
+      </button>
+
       <p id="message-ref" class="message"></p>
     </section>
 
@@ -77,69 +90,74 @@
 
   <script type="module">
     import { initMenu } from './js/commun.js';
-    import { afficherLivre, ouvrirLivreParReference } from './js/livre.js';
-    import { ouvrirScanner, fermerScanner } from './js/scanner.js';
+    import {
+      afficherLivre,
+      ouvrirLivreParReference
+    } from './js/livre.js';
+
+    import {
+      ouvrirScanner,
+      fermerScanner
+    } from './js/scanner.js';
 
     await initMenu();
     await afficherLivre();
 
-    const btnDemarrer = document.getElementById('btn-demarrer-scan');
-    const btnArreter = document.getElementById('btn-arreter-scan');
-    const lecteur = document.getElementById('lecteur-qr');
-    const message = document.getElementById('message-ref');
+    const start = document.querySelector('#btn-demarrer-scan');
+    const stop = document.querySelector('#btn-arreter-scan');
+    const box = document.querySelector('#lecteur-qr');
+    const message = document.querySelector('#message-ref');
 
-    btnDemarrer.addEventListener('click', async () => {
-      lecteur.classList.remove('hidden');
-      btnDemarrer.classList.add('hidden');
-      btnArreter.classList.remove('hidden');
-
-      message.textContent = 'Caméra ouverte. Placez le QR code du livre dans le cadre.';
-      message.className = 'message success';
+    start.onclick = async () => {
+      box.classList.remove('hidden');
+      start.classList.add('hidden');
+      stop.classList.remove('hidden');
 
       await ouvrirScanner({
         lecteurId: 'lecteur-qr',
-        onSuccess: async (valeur) => {
-          lecteur.classList.add('hidden');
-          btnDemarrer.classList.remove('hidden');
-          btnArreter.classList.add('hidden');
 
-          if (valeur.includes('livre.html?id=')) {
-            window.location.href = valeur;
+        onSuccess: async (value) => {
+          box.classList.add('hidden');
+          start.classList.remove('hidden');
+          stop.classList.add('hidden');
+
+          if (value.includes('livre.html?id=')) {
+            location.href = value;
             return;
           }
 
-          document.getElementById('livre-ref-input').value = valeur;
-          await ouvrirLivreParReference(valeur);
+          document.querySelector('#livre-ref-input').value = value;
+          await ouvrirLivreParReference(value);
         },
+
         onError: (error) => {
-          lecteur.classList.add('hidden');
-          btnDemarrer.classList.remove('hidden');
-          btnArreter.classList.add('hidden');
+          console.error(error);
+
+          box.classList.add('hidden');
+          start.classList.remove('hidden');
+          stop.classList.add('hidden');
 
           message.textContent =
-            "Impossible d'ouvrir la caméra. Autorisez la caméra et utilisez GitHub Pages/HTTPS.";
-          message.className = 'message error';
+            "Impossible d'ouvrir la caméra. Autorisez-la et utilisez HTTPS.";
 
-          console.error(error);
+          message.className = 'message error';
         }
       });
-    });
+    };
 
-    btnArreter.addEventListener('click', async () => {
+    stop.onclick = async () => {
       await fermerScanner();
 
-      lecteur.classList.add('hidden');
-      btnDemarrer.classList.remove('hidden');
-      btnArreter.classList.add('hidden');
+      box.classList.add('hidden');
+      start.classList.remove('hidden');
+      stop.classList.add('hidden');
+    };
 
-      message.textContent = 'Scanner fermé.';
-      message.className = 'message';
-    });
-
-    document.getElementById('btn-rechercher-ref').addEventListener('click', async () => {
-      const reference = document.getElementById('livre-ref-input').value.trim();
-      await ouvrirLivreParReference(reference);
-    });
+    document.querySelector('#btn-rechercher-ref').onclick = () => {
+      ouvrirLivreParReference(
+        document.querySelector('#livre-ref-input').value.trim()
+      );
+    };
   </script>
 </body>
 </html>
