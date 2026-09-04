@@ -1,49 +1,29 @@
-/* =========================================================
-   ESP ANTSIRANANA - BIBLIOTHÈQUE
-   Fichier : css/style.css
-   ========================================================= */
-
-/* ---------------------------------------------------------
-   1. Couleurs et réglages généraux
-   --------------------------------------------------------- */
-
 :root {
-  --navy: #082c43;
-  --navy-2: #0b4261;
-  --blue: #1376b8;
-  --blue-hover: #0d5f95;
-  --sky: #eaf5fb;
-
-  --green: #16855a;
-  --green-dark: #106640;
-  --green-light: #e8f7ef;
-
-  --orange: #b96b00;
-  --orange-light: #fff3dc;
-
-  --red: #c73535;
-  --red-dark: #9d2424;
-  --red-light: #fff0f0;
-
-  --purple: #6654c5;
-  --purple-dark: #4d3fa0;
-
-  --text: #172735;
-  --muted: #667784;
-  --background: #f3f7fa;
+  --blue-dark: #082f49;
+  --blue: #0f6fae;
+  --blue-light: #eaf5fb;
+  --blue-soft: #f2f9fd;
   --white: #ffffff;
-  --border: #d9e4eb;
+  --background: #f4f7fa;
+  --text: #1d2b36;
+  --muted: #667785;
+  --border: #dce6ed;
 
-  --shadow: 0 10px 30px rgba(10, 44, 67, 0.10);
-  --shadow-hover: 0 15px 35px rgba(10, 44, 67, 0.15);
+  --green: #16835a;
+  --green-bg: #e7f7ef;
 
+  --orange: #aa6500;
+  --orange-bg: #fff2d7;
+
+  --red: #c03434;
+  --red-bg: #fff0f0;
+
+  --purple: #6752c4;
+  --purple-dark: #4f3ca5;
+
+  --shadow: 0 10px 28px rgba(7, 47, 73, 0.10);
   --radius: 14px;
-  --radius-small: 8px;
 }
-
-/* ---------------------------------------------------------
-   2. Reset
-   --------------------------------------------------------- */
 
 * {
   box-sizing: border-box;
@@ -57,146 +37,113 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background:
-    radial-gradient(circle at top right, rgba(19, 118, 184, 0.08), transparent 28%),
-    linear-gradient(180deg, #f7fafc 0%, var(--background) 100%);
+  background: linear-gradient(180deg, #f8fbfd 0%, var(--background) 100%);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
-  font-size: 16px;
   line-height: 1.55;
-}
-
-img {
-  max-width: 100%;
 }
 
 button,
 input,
-textarea,
-select {
+textarea {
   font: inherit;
 }
 
-/* Classe essentielle :
-   Administration ou éléments privés restent invisibles */
 .hidden {
   display: none !important;
 }
 
-/* ---------------------------------------------------------
-   3. Navigation
-   --------------------------------------------------------- */
-
+/* Navigation */
 .site-header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(8, 44, 67, 0.98);
-  box-shadow: 0 3px 16px rgba(0, 25, 40, 0.22);
+  background: var(--blue-dark);
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.18);
 }
 
 .nav-container {
-  display: flex;
   width: min(1180px, calc(100% - 36px));
-  min-height: 72px;
-  margin: 0 auto;
+  min-height: 70px;
+  margin: auto;
+  display: flex;
   align-items: center;
-  gap: 25px;
+  gap: 24px;
 }
 
 .site-title {
   color: var(--white);
-  font-size: 1.1rem;
-  font-weight: 800;
-  letter-spacing: 0.2px;
   text-decoration: none;
+  font-weight: 800;
+  font-size: 1.08rem;
   white-space: nowrap;
 }
 
 .site-title::before {
   content: "📚";
-  margin-right: 9px;
-}
-
-.site-title:hover {
-  color: #e5f5ff;
+  margin-right: 8px;
 }
 
 .nav-menu {
   display: flex;
-  flex: 1;
   align-items: center;
-  gap: 4px;
+  flex: 1;
+  gap: 5px;
   flex-wrap: wrap;
 }
 
 .nav-menu a {
-  padding: 9px 11px;
-  border-radius: var(--radius-small);
-  color: #dbeaf3;
+  padding: 8px 10px;
+  color: #dcecf5;
+  text-decoration: none;
   font-size: 0.92rem;
   font-weight: 700;
-  text-decoration: none;
-  transition: background 0.2s ease, color 0.2s ease;
+  border-radius: 8px;
 }
 
 .nav-menu a:hover {
-  background: rgba(255, 255, 255, 0.13);
   color: var(--white);
+  background: rgba(255, 255, 255, 0.13);
 }
 
-.nav-buttons {
+.nav-actions {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.nom-utilisateur {
-  max-width: 180px;
+.user-name {
+  max-width: 170px;
   overflow: hidden;
-  color: #dbeaf3;
+  color: #dcecf5;
   font-size: 0.84rem;
   font-weight: 700;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* ---------------------------------------------------------
-   4. Boutons
-   --------------------------------------------------------- */
-
-button,
-.btn-login,
-.btn-logout,
-.btn-primary-link,
-.btn-secondary-link {
+/* Boutons */
+.btn,
+button {
   display: inline-flex;
   min-height: 40px;
-  padding: 9px 15px;
+  padding: 9px 14px;
   border: 1px solid transparent;
   border-radius: 8px;
   align-items: center;
   justify-content: center;
+  background: var(--blue);
+  color: var(--white);
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 800;
-  line-height: 1;
   text-decoration: none;
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  transition: 0.2s ease;
 }
 
-button {
-  background: var(--blue);
-  color: var(--white);
-}
-
+.btn:hover,
 button:hover {
-  background: var(--blue-hover);
-  box-shadow: 0 5px 14px rgba(19, 118, 184, 0.25);
+  background: #0b5d94;
   transform: translateY(-1px);
 }
 
@@ -204,231 +151,204 @@ button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
   transform: none;
-  box-shadow: none;
 }
 
-.btn-login {
+.btn-outline {
   border-color: rgba(255, 255, 255, 0.65);
   background: transparent;
   color: var(--white);
 }
 
-.btn-login:hover {
+.btn-outline:hover {
   border-color: var(--white);
   background: var(--white);
-  color: var(--navy);
+  color: var(--blue-dark);
 }
 
-.btn-logout {
+.btn-danger {
   background: var(--red);
-  color: var(--white);
 }
 
-.btn-logout:hover {
-  background: var(--red-dark);
+.btn-danger:hover {
+  background: #962525;
 }
 
-.btn-primary-link {
+.btn-light {
   background: var(--white);
-  color: var(--navy);
+  color: var(--blue-dark);
 }
 
-.btn-primary-link:hover {
-  background: #e8f5fc;
-  transform: translateY(-1px);
+.btn-light:hover {
+  background: #e9f5fb;
+  color: var(--blue-dark);
 }
 
-.btn-secondary-link {
-  border-color: rgba(255, 255, 255, 0.70);
+.btn-hero-outline {
+  border-color: rgba(255, 255, 255, 0.7);
   background: transparent;
   color: var(--white);
 }
 
-.btn-secondary-link:hover {
-  background: rgba(255, 255, 255, 0.15);
+.btn-hero-outline:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.btn-purple {
+  background: var(--purple);
+}
+
+.btn-purple:hover {
+  background: var(--purple-dark);
 }
 
 .btn-accept {
   background: var(--green);
-  color: var(--white);
 }
 
 .btn-accept:hover {
-  background: var(--green-dark);
+  background: #0e6642;
 }
 
 .btn-reject,
 .btn-delete {
   background: var(--red);
-  color: var(--white);
 }
 
 .btn-reject:hover,
 .btn-delete:hover {
-  background: var(--red-dark);
+  background: #962525;
 }
 
 .btn-return {
   background: var(--purple);
-  color: var(--white);
 }
 
 .btn-return:hover {
   background: var(--purple-dark);
 }
 
-/* ---------------------------------------------------------
-   5. Conteneur principal
-   --------------------------------------------------------- */
-
-.page-content,
-body > h1,
-body > h2,
-body > h3,
-body > p,
-body > section,
-body > form,
-body > table,
-body > .stats,
-body > #liste-livres,
-body > #contenu-livre {
+/* Page */
+.container {
   width: min(1180px, calc(100% - 36px));
-  margin-right: auto;
-  margin-left: auto;
+  margin: 32px auto 54px;
 }
 
-.page-content {
-  margin-top: 30px;
-  margin-bottom: 55px;
+.narrow {
+  max-width: 680px;
 }
 
-/* ---------------------------------------------------------
-   6. Titres et textes
-   --------------------------------------------------------- */
+.page-header {
+  margin-bottom: 22px;
+}
 
+.page-header h1 {
+  margin: 0 0 10px;
+  color: var(--blue-dark);
+  font-size: clamp(1.8rem, 4vw, 2.4rem);
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.hero {
+  padding: 38px;
+  border-radius: 16px;
+  background: linear-gradient(125deg, var(--blue-dark), #1378b7);
+  box-shadow: var(--shadow);
+}
+
+.hero h1 {
+  margin: 0 0 12px;
+  color: var(--white);
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+}
+
+.hero p {
+  max-width: 700px;
+  margin: 0;
+  color: #dceef7;
+}
+
+.hero .eyebrow {
+  color: #ffd478;
+}
+
+.hero-actions,
+.button-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+}
+
+/* Textes */
 h1,
 h2,
 h3 {
-  color: var(--navy);
+  color: var(--blue-dark);
   line-height: 1.2;
 }
 
-h1 {
-  margin-top: 32px;
-  margin-bottom: 12px;
-  font-size: clamp(1.8rem, 4vw, 2.5rem);
-}
-
 h2 {
-  margin-top: 0;
-  margin-bottom: 14px;
-  font-size: 1.35rem;
+  margin: 0 0 12px;
+  font-size: 1.3rem;
 }
 
 h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 1.08rem;
-}
-
-p {
-  color: var(--muted);
+  margin: 0 0 7px;
 }
 
 .eyebrow {
-  margin: 0 0 8px;
-  color: #0c75b7;
+  margin: 0 0 7px;
+  color: var(--blue);
   font-size: 0.76rem;
   font-weight: 850;
-  letter-spacing: 1.1px;
+  letter-spacing: 1px;
   text-transform: uppercase;
 }
 
-.small-info {
-  margin: 5px 0 9px;
-  color: var(--muted);
-  font-size: 0.82rem;
+.blue {
+  color: var(--blue);
 }
 
-.admin-description {
-  margin-top: -4px;
-  margin-bottom: 19px;
+.help-text {
+  margin: 12px 0 0;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
-.error {
-  color: var(--red);
+.message {
+  min-height: 22px;
+  margin: 12px 0 0;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
 .success {
   color: var(--green);
-  font-weight: 700;
 }
 
-.message,
-#message,
-#message-ref,
-#message-livre {
-  min-height: 22px;
-  margin-top: 12px;
+.error {
+  color: var(--red);
+}
+
+.text-link {
+  color: var(--blue);
   font-size: 0.9rem;
-  font-weight: 650;
+  font-weight: 800;
+  text-decoration: none;
 }
 
-/* ---------------------------------------------------------
-   7. Hero accueil et admin
-   --------------------------------------------------------- */
-
-.hero-accueil,
-.admin-hero {
-  margin-top: 30px;
-  padding: 38px;
-  border-radius: 16px;
-  background:
-    linear-gradient(130deg, rgba(8, 44, 67, 0.98), rgba(18, 94, 137, 0.94)),
-    var(--navy);
-  box-shadow: var(--shadow);
+.text-link:hover {
+  text-decoration: underline;
 }
 
-.hero-accueil h1,
-.admin-hero h1 {
-  margin: 0 0 12px;
-  color: var(--white);
-}
-
-.hero-accueil p,
-.admin-hero p {
-  max-width: 700px;
-  margin: 0;
-  color: #d9ebf5;
-}
-
-.hero-accueil .eyebrow,
-.admin-hero .eyebrow {
-  margin-bottom: 10px;
-  color: #f4c76b;
-}
-
-.hero-actions {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 25px;
-}
-
-/* ---------------------------------------------------------
-   8. Cartes et sections
-   --------------------------------------------------------- */
-
-.admin-card,
-section,
-.livre,
-#contenu-livre,
-form {
-  margin-top: 20px;
-  margin-bottom: 20px;
+/* Cartes */
+.content-card,
+.auth-card {
+  margin-top: 22px;
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -436,216 +356,151 @@ form {
   box-shadow: var(--shadow);
 }
 
-.admin-card {
-  margin-top: 24px;
+.auth-card {
+  margin-top: 45px;
 }
 
-.admin-card:hover,
-.livre:hover {
-  box-shadow: var(--shadow-hover);
+.auth-card > p {
+  color: var(--muted);
 }
 
-.section-title-row {
+.auth-bottom {
+  margin-top: 18px;
+}
+
+.auth-bottom a {
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.section-heading {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin-bottom: 14px;
 }
 
-.section-title-row h2 {
+.section-heading h2 {
   margin: 0;
 }
 
-/* ---------------------------------------------------------
-   9. Statistiques accueil
-   --------------------------------------------------------- */
-
-.stats {
+/* Accueil */
+.stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(210px, 1fr));
+  grid-template-columns: repeat(2, minmax(190px, 1fr));
   gap: 18px;
-  margin-top: 24px;
+  margin-top: 22px;
 }
 
-.stat-box {
-  padding: 22px;
+.stat-card {
+  padding: 20px;
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--white);
   box-shadow: var(--shadow);
 }
 
-.stat-box p {
-  margin: 0 0 10px;
+.stat-card p {
+  margin: 0 0 9px;
   color: var(--muted);
   font-size: 0.92rem;
   font-weight: 700;
 }
 
-.valeur {
-  display: block;
-  color: var(--navy);
-  font-size: 2.05rem;
-  font-weight: 850;
+.stat-card strong {
+  color: var(--blue-dark);
+  font-size: 2rem;
 }
 
-.accueil-livres {
-  margin-top: 36px;
-}
-
-.voir-tout {
-  color: var(--blue);
-  font-size: 0.9rem;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.voir-tout:hover {
-  text-decoration: underline;
-}
-
-.liste-livres {
+.books-list {
   overflow: hidden;
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow);
+  border-radius: 10px;
 }
 
-.livre-accueil-card {
+.book-row {
   display: flex;
-  padding: 18px 20px;
-  border-bottom: 1px solid #e9eff3;
+  padding: 17px 18px;
+  border-bottom: 1px solid #e8eef2;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 16px;
   color: var(--text);
   text-decoration: none;
-  transition: background 0.2s ease;
 }
 
-.livre-accueil-card:last-child {
+.book-row:last-child {
   border-bottom: 0;
 }
 
-.livre-accueil-card:hover {
-  background: #f0f8fc;
+.book-row:hover {
+  background: var(--blue-soft);
 }
 
-.livre-accueil-main h3 {
-  margin: 0 0 5px;
-  color: var(--navy);
+.book-row h3 {
+  margin: 0 0 4px;
   font-size: 1rem;
 }
 
-.livre-accueil-main p {
+.book-row p {
   margin: 0;
+  color: var(--muted);
+  font-size: 0.87rem;
+}
+
+/* Catalogue */
+.search-label {
+  display: block;
+  margin-bottom: 20px;
+  color: #344857;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.catalogue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(265px, 1fr));
+  gap: 18px;
+}
+
+.book-card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text);
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.book-card:hover {
+  background: var(--blue-soft);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.book-card h3 {
+  margin: 0 0 8px;
+  color: var(--blue-dark);
+}
+
+.book-card p {
+  margin: 6px 0;
   color: var(--muted);
   font-size: 0.88rem;
 }
 
-.livre-accueil-side {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.arrow-link {
-  color: var(--blue);
-  font-size: 0.85rem;
-  font-weight: 850;
-  white-space: nowrap;
-}
-
-.empty-state {
-  padding: 30px;
-  color: var(--muted);
-  text-align: center;
-}
-
-/* ---------------------------------------------------------
-   10. Catalogue et fiche livre
-   --------------------------------------------------------- */
-
-.livre {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.livre:hover {
-  transform: translateY(-2px);
-}
-
-.livre h3 {
-  color: var(--navy);
-  font-size: 1.18rem;
-}
-
-.livre p {
-  margin: 7px 0;
-}
-
-.actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 16px;
-}
-
-.disponible {
-  color: var(--green);
-  font-weight: 850;
-}
-
-.indisponible {
-  color: var(--red);
-  font-weight: 850;
-}
-
-.fiche-livre-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
-  gap: 12px 28px;
-  margin: 20px 0;
-}
-
-.fiche-livre-grid p {
-  margin: 0;
-}
-
-.resume-livre {
-  padding: 16px;
-  border-left: 4px solid var(--blue);
-  border-radius: 4px;
-  background: #f1f8fc;
-}
-
-.resume-livre p {
-  margin: 7px 0 0;
-}
-
-/* ---------------------------------------------------------
-   11. Formulaires
-   --------------------------------------------------------- */
-
+/* Formulaires */
 form {
-  width: min(650px, calc(100% - 36px));
-  margin: 26px auto;
-}
-
-.form-livre {
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
+  margin-top: 18px;
 }
 
 label {
   display: block;
-  margin-top: 16px;
-  color: #354858;
+  margin-top: 15px;
+  color: #344857;
   font-size: 0.9rem;
   font-weight: 800;
 }
@@ -655,25 +510,21 @@ label:first-child {
 }
 
 input,
-textarea,
-select {
+textarea {
   width: 100%;
   margin-top: 7px;
   padding: 11px 12px;
-  outline: none;
-  border: 1px solid #c7d5df;
+  border: 1px solid #c8d6df;
   border-radius: 8px;
-  background: #ffffff;
+  outline: none;
+  background: #fff;
   color: var(--text);
-  font-size: 0.94rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 input:focus,
-textarea:focus,
-select:focus {
+textarea:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(19, 118, 184, 0.16);
+  box-shadow: 0 0 0 3px rgba(15, 111, 174, 0.15);
 }
 
 textarea {
@@ -684,25 +535,48 @@ textarea {
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 17px;
+  gap: 16px;
 }
 
 .form-grid label {
   margin-top: 0;
 }
 
-form button {
-  margin-top: 22px;
+.admin-form {
+  margin-top: 0;
 }
 
-/* ---------------------------------------------------------
-   12. Tableaux administration et espace utilisateur
-   --------------------------------------------------------- */
+/* Profil */
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(210px, 1fr));
+  gap: 16px;
+}
 
+.profile-grid div {
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--blue-soft);
+}
+
+.profile-grid span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.profile-grid strong {
+  color: var(--blue-dark);
+}
+
+/* Tableaux */
 .table-wrapper {
   overflow-x: auto;
   border: 1px solid var(--border);
-  border-radius: 11px;
+  border-radius: 10px;
 }
 
 table {
@@ -713,201 +587,180 @@ table {
 
 th,
 td {
-  padding: 13px 14px;
-  border-bottom: 1px solid #e7eef2;
-  color: #334857;
+  padding: 12px 13px;
+  border-bottom: 1px solid #e8eef2;
+  color: #344857;
   text-align: left;
   vertical-align: middle;
-  font-size: 0.88rem;
+  font-size: 0.86rem;
 }
 
 th {
-  background: #edf6fa;
-  color: var(--navy);
-  font-size: 0.77rem;
+  background: var(--blue-light);
+  color: var(--blue-dark);
+  font-size: 0.76rem;
   font-weight: 850;
-  letter-spacing: 0.25px;
+  letter-spacing: 0.2px;
   text-transform: uppercase;
-}
-
-tr:last-child td {
-  border-bottom: 0;
 }
 
 tbody tr:hover {
   background: #f8fbfd;
 }
 
+tr:last-child td {
+  border-bottom: 0;
+}
+
 td button {
   min-height: 34px;
   margin: 2px;
-  padding: 7px 10px;
+  padding: 7px 9px;
   font-size: 0.78rem;
-}
-
-.actions-cell {
-  min-width: 245px;
 }
 
 .table-label {
   display: block;
-  margin: 0 0 9px;
-  color: #445968;
+  min-width: 150px;
+  margin-bottom: 8px;
   font-size: 0.74rem;
-  font-weight: 850;
+  font-weight: 800;
 }
 
 .table-label input {
-  min-width: 148px;
-  margin-top: 5px;
-  padding: 7px 8px;
-  font-size: 0.82rem;
+  min-width: 145px;
+  margin-top: 4px;
+  padding: 7px;
 }
 
-/* ---------------------------------------------------------
-   13. Badges
-   --------------------------------------------------------- */
+.actions-cell {
+  min-width: 240px;
+}
 
+/* Statuts */
 .badge {
   display: inline-block;
   padding: 5px 9px;
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 850;
-  letter-spacing: 0.1px;
   text-transform: capitalize;
 }
 
 .badge-pending {
-  background: var(--orange-light);
+  background: var(--orange-bg);
   color: var(--orange);
 }
 
 .badge-approved,
 .badge-active,
 .badge-returned {
-  background: var(--green-light);
+  background: var(--green-bg);
   color: var(--green);
 }
 
-.badge-rejected,
-.badge-inactive {
-  background: var(--red-light);
+.badge-rejected {
+  background: var(--red-bg);
   color: var(--red);
 }
 
 .badge-overdue {
-  background: #ffe5e5;
-  color: #a61e1e;
+  background: #ffe4e4;
+  color: #a31e1e;
 }
 
-/* ---------------------------------------------------------
-   14. Scanner QR / code-barres
-   --------------------------------------------------------- */
-
-.scan-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.lecteur-qr {
+/* Scanner */
+.scanner-box {
   width: min(100%, 480px);
-  margin-top: 19px;
+  margin-top: 18px;
   overflow: hidden;
   border: 2px dashed var(--blue);
   border-radius: 12px;
-  background: #eef8fc;
+  background: var(--blue-soft);
 }
 
-.lecteur-qr video {
+.scanner-box video {
   width: 100% !important;
   border-radius: 9px;
 }
 
-/* Style possible de la zone de scan */
-.zone-scan-qr {
-  display: flex;
-  min-height: 300px;
+/* Détail livre */
+.book-details {
   margin-top: 18px;
-  padding: 12px;
-  border: 2px dashed var(--blue);
-  border-radius: 12px;
-  align-items: center;
-  flex-direction: column;
-  gap: 12px;
-  background: #eef8fc;
 }
 
-.zone-scan-qr video {
-  width: min(100%, 430px);
-  max-height: 340px;
-  border-radius: 10px;
-  background: #0b2c43;
-  object-fit: cover;
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(180px, 1fr));
+  gap: 12px 22px;
 }
 
-/* ---------------------------------------------------------
-   15. Fenêtre QR code à imprimer / télécharger
-   --------------------------------------------------------- */
+.details-grid p {
+  margin: 0;
+}
 
+.summary-box {
+  margin-top: 18px;
+  padding: 15px;
+  border-left: 4px solid var(--blue);
+  border-radius: 4px;
+  background: var(--blue-soft);
+}
+
+.summary-box p {
+  margin: 7px 0 0;
+  color: var(--muted);
+}
+
+/* QR modal */
 .modal {
   position: fixed;
   z-index: 1000;
   inset: 0;
   display: flex;
-  padding: 20px;
+  padding: 18px;
   align-items: center;
   justify-content: center;
-  background: rgba(4, 27, 41, 0.72);
+  background: rgba(4, 30, 46, 0.72);
 }
 
 .modal-content {
   position: relative;
-  width: min(460px, 100%);
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-  padding: 30px;
-  border-radius: 15px;
-  background: var(--white);
-  box-shadow: 0 22px 65px rgba(0, 0, 0, 0.32);
+  width: min(450px, 100%);
+  padding: 28px;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.32);
   text-align: center;
-}
-
-.modal-content h2 {
-  margin-top: 0;
 }
 
 .modal-close {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 37px;
-  min-height: 37px;
+  top: 10px;
+  right: 10px;
+  width: 36px;
+  min-height: 36px;
   padding: 0;
   border-radius: 50%;
-  background: #edf3f6;
-  color: var(--navy);
-  font-size: 25px;
-  line-height: 1;
+  background: #eaf0f4;
+  color: var(--blue-dark);
+  font-size: 24px;
 }
 
 .modal-close:hover {
-  background: #dce8ed;
-  box-shadow: none;
+  background: #dbe6ec;
   transform: none;
 }
 
 .qrcode-container {
   display: flex;
-  min-height: 285px;
-  margin: 20px auto;
+  min-height: 280px;
+  margin: 18px auto;
   padding: 12px;
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 10px;
   align-items: center;
   justify-content: center;
-  background: #ffffff;
 }
 
 .qrcode-container img,
@@ -917,26 +770,20 @@ td button {
   height: auto;
 }
 
-.qr-help {
-  margin-bottom: 18px;
+/* Pied page */
+.site-footer {
+  padding: 24px 18px;
+  border-top: 1px solid var(--border);
+  background: #fff;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.86rem;
+  text-align: center;
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-/* ---------------------------------------------------------
-   16. Responsive : téléphone et petit écran
-   --------------------------------------------------------- */
-
+/* Mobile */
 @media (max-width: 760px) {
   .nav-container {
-    width: min(100% - 24px, 1180px);
+    width: calc(100% - 24px);
     padding: 13px 0;
     align-items: flex-start;
     flex-direction: column;
@@ -944,66 +791,33 @@ td button {
   }
 
   .nav-menu,
-  .nav-buttons {
+  .nav-actions {
     width: 100%;
     flex-wrap: wrap;
   }
 
-  .nav-buttons {
-    justify-content: flex-start;
-  }
-
-  .nom-utilisateur {
-    max-width: 145px;
-  }
-
-  .page-content,
-  body > h1,
-  body > h2,
-  body > h3,
-  body > p,
-  body > section,
-  body > form,
-  body > table,
-  body > .stats,
-  body > #liste-livres,
-  body > #contenu-livre {
+  .container {
     width: calc(100% - 24px);
+    margin-top: 22px;
   }
 
-  .hero-accueil,
-  .admin-hero {
-    margin-top: 20px;
-    padding: 26px 21px;
+  .hero,
+  .content-card,
+  .auth-card {
+    padding: 20px;
   }
 
-  .stats,
+  .stats-grid,
   .form-grid,
-  .fiche-livre-grid {
+  .profile-grid,
+  .details-grid {
     grid-template-columns: 1fr;
   }
 
-  .section-title-row,
-  .livre-accueil-card {
+  .section-heading,
+  .book-row {
     align-items: flex-start;
     flex-direction: column;
-  }
-
-  .livre-accueil-side {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .admin-card,
-  section,
-  .livre,
-  #contenu-livre,
-  form {
-    padding: 18px;
-  }
-
-  .table-wrapper {
-    width: 100%;
   }
 
   th,
@@ -1011,38 +825,7 @@ td button {
     white-space: nowrap;
   }
 
-  .modal-content {
-    padding: 24px 18px;
+  .user-name {
+    max-width: 135px;
   }
-}
-
-/* ---------------------------------------------------------
-   17. Impression
-   --------------------------------------------------------- */
-
-@media print {
-  .site-header,
-  button,
-  .btn-login,
-  .btn-logout,
-  .hero-actions,
-  .scan-actions,
-  .modal-close {
-    display: none !important;
-  }
-
-  body {
-    background: #ffffff;
-  }
-
-  .page-content,
-  .admin-card,
-  section,
-  .livre,
-  #contenu-livre {
-    width: 100%;
-    margin: 0;
-    border: 0;
-    box-shadow: none;
-  }
-    }
+   }
