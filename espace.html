@@ -1,54 +1,106 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Espace utilisateur</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mon espace | ESP Antsiranana</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
-  <h1>Mon espace</h1>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
+        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
+        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
+      </nav>
 
-  <section>
-    <h2>Mon profil</h2>
-    <p><strong>Nom :</strong> <span id="profil-nom"></span></p>
-    <p><strong>E-mail :</strong> <span id="profil-email"></span></p>
-    <p><strong>Carte d'identité :</strong> <span id="profil-carte-identite"></span></p>
-    <p><strong>Carte étudiant :</strong> <span id="profil-carte-etudiant"></span></p>
-  </section>
+      <div class="nav-actions">
+        <span id="nom-utilisateur" class="user-name hidden"></span>
+        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
+      </div>
+    </div>
+  </header>
 
-  <section>
-    <h2>Historique des emprunts</h2>
-    <table id="table-historique">
-      <thead>
-        <tr>
-          <th>Livre</th>
-          <th>Auteur</th>
-          <th>Statut</th>
-          <th>Date emprunt</th>
-          <th>Date retour prévue</th>
-          <th>Date retour réel</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </section>
+  <main class="container">
+    <section class="page-header">
+      <p class="eyebrow blue">Espace membre</p>
+      <h1>Mon espace</h1>
+      <p>Consultez vos informations, vos demandes et vos emprunts.</p>
+    </section>
+
+    <section class="content-card">
+      <h2>Mes informations</h2>
+
+      <div class="profile-grid">
+        <div>
+          <span>Nom</span>
+          <strong id="profil-nom">-</strong>
+        </div>
+
+        <div>
+          <span>E-mail</span>
+          <strong id="profil-email">-</strong>
+        </div>
+
+        <div>
+          <span>Carte d’identité</span>
+          <strong id="profil-carte-identite">-</strong>
+        </div>
+
+        <div>
+          <span>Carte étudiant</span>
+          <strong id="profil-carte-etudiant">-</strong>
+        </div>
+
+        <div>
+          <span>Statut du compte</span>
+          <strong id="profil-status">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <h2>Mes emprunts</h2>
+
+      <div class="table-wrapper">
+        <table id="table-historique">
+          <thead>
+            <tr>
+              <th>Livre</th>
+              <th>Statut</th>
+              <th>Date emprunt</th>
+              <th>Retour prévu</th>
+              <th>Retour réel</th>
+              <th>Pénalité</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6">Chargement...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
     import { afficherEspace } from './js/espace.js';
 
-    initMenu();
-    afficherEspace();
+    await initMenu();
+    await afficherEspace();
   </script>
 </body>
-</html>
+  </html>
