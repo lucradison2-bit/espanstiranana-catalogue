@@ -1,0 +1,29 @@
+<!-- header.html -->
+<nav style="border-bottom:1px solid #ccc; padding:10px;">
+  <a href="accueil.html">Accueil</a>
+  <a href="livres.html">Livres</a>
+
+  <!-- Lien admin (masqué par défaut via JS) -->
+  <a id="lien-admin" href="administration.html" style="display:none; margin-left:15px;">
+    Administration
+  </a>
+
+  <span id="span-nom-utilisateur" style="margin-left:20px;"></span>
+
+  <a id="btn-connexion" href="connexion.html" style="margin-left:20px;">Connexion</a>
+  <a id="btn-deconnexion" href="#" style="display:none; margin-left:10px;">Déconnexion</a>
+</nav>
+
+<script type="module">
+  import { initHeader } from './header.js';
+  initHeader();
+</script>
+<div id="header-container"></div>
+<script type="module">
+  fetch('header.html')
+    .then(r => r.text())
+    .then(html => {
+      document.getElementById('header-container').innerHTML = html;
+      // re-exécuter le script si nécessaire, ou mieux : mettre le header dans un module partagé
+    });
+</script>
