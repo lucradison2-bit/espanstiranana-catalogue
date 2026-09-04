@@ -1,31 +1,63 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Catalogue – Bibliothèque</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catalogue | ESP Antsiranana</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
-  <h1>Catalogue des livres</h1>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
 
-  <div id="liste-livres">Chargement...</div>
+        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
+        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
+      </nav>
+
+      <div class="nav-actions">
+        <span id="nom-utilisateur" class="user-name hidden"></span>
+        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="page-header">
+      <p class="eyebrow blue">Bibliothèque</p>
+      <h1>Catalogue des livres</h1>
+      <p>Choisissez un livre pour voir ses informations et demander un emprunt.</p>
+    </section>
+
+    <section class="content-card">
+      <label class="search-label">
+        Rechercher un livre
+        <input id="recherche-livre" type="search" placeholder="Titre, auteur, catégorie ou référence">
+      </label>
+
+      <div id="liste-livres" class="catalogue-grid">
+        Chargement des livres...
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
     import { afficherCatalogue } from './js/catalogue.js';
 
-    initMenu();
-    afficherCatalogue();
+    await initMenu();
+    await afficherCatalogue();
   </script>
 </body>
 </html>
