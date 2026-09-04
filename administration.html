@@ -1,31 +1,132 @@
-<header class="site-header">
-  <div class="nav-container">
-    <a class="logo" href="index.html">ESP Antsiranana</a>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Administration | Bibliothèque ESP Antsiranana</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
 
-    <nav class="nav-links" aria-label="Navigation principale">
-      <a href="index.html">Accueil</a>
-      <a href="catalogue.html">Catalogue</a>
-      <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">Bibliothèque ESP Antsiranana</a>
 
-      <!-- IMPORTANT : caché dans le HTML dès le départ -->
-      <a
-        href="administration.html"
-        id="lien-admin"
-        class="hidden"
-        aria-hidden="true"
-      >
-        Administration
-      </a>
-    </nav>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
 
-    <div class="nav-actions">
-      <span id="span-nom-utilisateur" class="user-name"></span>
-      <a href="connexion.html" id="btn-connexion" class="btn btn-outline">
-        Connexion
-      </a>
-      <button id="btn-deconnexion" class="btn btn-danger hidden" type="button">
-        Déconnexion
-      </button>
+        <a href="espace.html" id="lien-espace" class="hidden">
+          Mon espace
+        </a>
+
+        <a href="administration.html" id="lien-admin" class="hidden">
+          Administration
+        </a>
+      </nav>
+
+      <div class="nav-buttons">
+        <a href="connexion.html" id="btn-connexion" class="btn-login">
+          Connexion
+        </a>
+
+        <button id="btn-deconnexion" class="btn-logout hidden" type="button">
+          Déconnexion
+        </button>
+      </div>
     </div>
-  </div>
-</header>
+  </header>
+
+  <!-- Caché jusqu'à la vérification du vrai rôle admin -->
+  <main id="contenu-admin" class="hidden page-content">
+    <section class="admin-hero">
+      <p class="eyebrow">Espace privé</p>
+      <h1>Administration</h1>
+      <p>Gérez les demandes d’emprunt et les livres de la bibliothèque.</p>
+    </section>
+
+    <section class="admin-card">
+      <h2>Demandes d’emprunt</h2>
+
+      <div class="table-wrapper">
+        <table id="table-demandes">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Livre</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Ajouter un livre</h2>
+
+      <form id="form-ajout-livre" class="form-livre">
+        <div class="form-grid">
+          <label>
+            Titre *
+            <input id="livre-titre" type="text" required />
+          </label>
+
+          <label>
+            Auteur
+            <input id="livre-auteur" type="text" />
+          </label>
+
+          <label>
+            Référence / code QR
+            <input id="livre-ref" type="text" />
+          </label>
+
+          <label>
+            Catégorie
+            <input id="livre-categorie" type="text" />
+          </label>
+        </div>
+
+        <label>
+          Résumé
+          <textarea id="livre-resume" rows="4"></textarea>
+        </label>
+
+        <button type="submit" class="btn-primary">
+          Ajouter le livre
+        </button>
+      </form>
+    </section>
+
+    <section class="admin-card">
+      <h2>Livres enregistrés</h2>
+
+      <div class="table-wrapper">
+        <table id="table-livres">
+          <thead>
+            <tr>
+              <th>Titre</th>
+              <th>Auteur</th>
+              <th>Référence</th>
+              <th>Catégorie</th>
+              <th>Disponibilité</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initMenu } from './js/commun.js';
+    import { initAdministration } from './js/administration.js';
+
+    await initMenu();
+    await initAdministration();
+  </script>
+</body>
+        </html>
