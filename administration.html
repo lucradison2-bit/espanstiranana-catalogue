@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Administration | ESP Antsiranana</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css">
 
-  <!-- Bibliothèque pour créer les QR codes des livres physiques -->
+  <!-- Générateur de QR code pour les livres physiques -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
@@ -18,63 +18,44 @@
       <nav class="nav-menu">
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
-
-        <a href="espace.html" id="lien-espace" class="hidden">
-          Mon espace
-        </a>
-
-        <!-- Toujours caché avant la vérification JavaScript -->
-        <a href="administration.html" id="lien-admin" class="hidden">
-          Administration
-        </a>
+        <a href="livre.html">Scanner un livre</a>
+        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
+        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
       </nav>
 
-      <div class="nav-buttons">
-        <span id="nom-utilisateur" class="nom-utilisateur hidden"></span>
-
-        <a href="connexion.html" id="btn-connexion" class="btn-login">
-          Connexion
-        </a>
-
-        <button id="btn-deconnexion" class="btn-logout hidden" type="button">
-          Déconnexion
-        </button>
+      <div class="nav-actions">
+        <span id="nom-utilisateur" class="user-name hidden"></span>
+        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
       </div>
     </div>
   </header>
 
-  <!-- Toute la page reste cachée si la personne n'est pas admin -->
-  <main id="contenu-admin" class="hidden page-content">
-    <section class="admin-hero">
-      <p class="eyebrow">Espace privé</p>
-      <h1>Administration de la bibliothèque</h1>
+  <main id="contenu-admin" class="container hidden">
+    <section class="hero admin-hero">
+      <p class="eyebrow">Accès réservé</p>
+      <h1>Administration</h1>
       <p>
-        Gérez les comptes utilisateurs, les demandes d’emprunt, les dates de
-        retour, les pénalités et les livres physiques.
+        Gérez les comptes, les emprunts, les dates de retour, les pénalités
+        et les livres physiques.
       </p>
     </section>
 
-    <!-- Validation des comptes -->
-    <section class="admin-card">
-      <div class="section-title-row">
+    <section class="content-card">
+      <div class="section-heading">
         <div>
-          <p class="eyebrow">Utilisateurs</p>
-          <h2>Comptes en attente de validation</h2>
+          <p class="eyebrow blue">Utilisateurs</p>
+          <h2>Comptes à valider</h2>
         </div>
       </div>
-
-      <p class="admin-description">
-        L’utilisateur doit confirmer son adresse e-mail, puis un administrateur
-        accepte ou refuse son compte.
-      </p>
 
       <div class="table-wrapper">
         <table id="table-comptes">
           <thead>
             <tr>
               <th>Nom</th>
-              <th>Adresse e-mail</th>
-              <th>Carte d’identité</th>
+              <th>E-mail</th>
+              <th>Carte identité</th>
               <th>Carte étudiant</th>
               <th>Actions</th>
             </tr>
@@ -88,104 +69,74 @@
       </div>
     </section>
 
-    <!-- Gestion des emprunts -->
-    <section class="admin-card">
-      <div class="section-title-row">
+    <section class="content-card">
+      <div class="section-heading">
         <div>
-          <p class="eyebrow">Emprunts</p>
-          <h2>Demandes, retours et pénalités</h2>
+          <p class="eyebrow blue">Emprunts</p>
+          <h2>Demandes, dates de retour et pénalités</h2>
         </div>
       </div>
 
-      <p class="admin-description">
-        Pour accepter un emprunt, choisissez la date de retour. Cette date peut
-        être modifiée tant que le livre n’est pas retourné.
+      <p class="help-text">
+        L’administrateur choisit la date de retour lors de l’acceptation.
+        Cette date reste modifiable jusqu’au retour du livre.
       </p>
 
       <div class="table-wrapper">
-        <table id="table-demandes">
+        <table id="table-emprunts">
           <thead>
             <tr>
               <th>Utilisateur</th>
               <th>Livre</th>
-              <th>Date demande</th>
               <th>Statut</th>
               <th>Retour prévu</th>
               <th>Pénalité</th>
-              <th>Actions admin</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td colspan="7">Chargement...</td>
+              <td colspan="6">Chargement...</td>
             </tr>
           </tbody>
         </table>
       </div>
     </section>
 
-    <!-- Ajout de livre -->
-    <section class="admin-card">
-      <div class="section-title-row">
+    <section class="content-card">
+      <div class="section-heading">
         <div>
-          <p class="eyebrow">Catalogue</p>
+          <p class="eyebrow blue">Catalogue</p>
           <h2>Ajouter un livre physique</h2>
         </div>
       </div>
 
-      <p class="admin-description">
-        La référence doit être unique. Elle peut aussi être imprimée sous forme
-        de QR code à coller sur le livre physique.
-      </p>
-
-      <form id="form-ajout-livre" class="form-livre">
+      <form id="form-ajout-livre" class="admin-form">
         <div class="form-grid">
           <label>
-            Titre du livre *
-            <input
-              type="text"
-              id="livre-titre"
-              required
-              placeholder="Exemple : Algèbre générale"
-            />
+            Titre *
+            <input id="livre-titre" type="text" required>
           </label>
 
           <label>
             Auteur
-            <input
-              type="text"
-              id="livre-auteur"
-              placeholder="Exemple : Jean Dupont"
-            />
+            <input id="livre-auteur" type="text">
           </label>
 
           <label>
             Référence unique *
-            <input
-              type="text"
-              id="livre-ref"
-              required
-              placeholder="Exemple : ESP-MATH-001"
-            />
+            <input id="livre-ref" type="text" required placeholder="ESP-INFO-001">
           </label>
 
           <label>
             Catégorie
-            <input
-              type="text"
-              id="livre-categorie"
-              placeholder="Exemple : Mathématiques"
-            />
+            <input id="livre-categorie" type="text">
           </label>
         </div>
 
         <label>
           Résumé
-          <textarea
-            id="livre-resume"
-            rows="4"
-            placeholder="Résumé ou description du livre"
-          ></textarea>
+          <textarea id="livre-resume" rows="4"></textarea>
         </label>
 
         <button type="submit">Ajouter le livre</button>
@@ -193,19 +144,13 @@
       </form>
     </section>
 
-    <!-- Liste de livres -->
-    <section class="admin-card">
-      <div class="section-title-row">
+    <section class="content-card">
+      <div class="section-heading">
         <div>
-          <p class="eyebrow">Livres physiques</p>
-          <h2>Livres enregistrés et QR codes</h2>
+          <p class="eyebrow blue">Livres physiques</p>
+          <h2>Livres et QR codes</h2>
         </div>
       </div>
-
-      <p class="admin-description">
-        Cliquez sur « QR code » pour télécharger ou imprimer un QR code unique
-        à coller sur le livre physique.
-      </p>
 
       <div class="table-wrapper">
         <table id="table-livres">
@@ -230,40 +175,27 @@
     </section>
   </main>
 
-  <!-- Fenêtre affichant le QR code -->
-  <div id="modal-qr" class="modal hidden" role="dialog" aria-modal="true">
+  <!-- Fenêtre QR code -->
+  <div id="modal-qr" class="modal hidden">
     <div class="modal-content">
-      <button
-        id="btn-fermer-qr"
-        type="button"
-        class="modal-close"
-        aria-label="Fermer la fenêtre"
-      >
-        ×
-      </button>
+      <button id="btn-fermer-qr" type="button" class="modal-close">×</button>
 
-      <p class="eyebrow">Livre physique</p>
-      <h2 id="qr-titre">QR code du livre</h2>
-      <p id="qr-reference" class="small-info"></p>
+      <p class="eyebrow blue">Livre physique</p>
+      <h2 id="qr-titre">QR code</h2>
+      <p id="qr-reference" class="help-text"></p>
 
       <div id="qrcode-container" class="qrcode-container"></div>
 
-      <p class="qr-help">
-        Imprimez ce QR code puis collez-le sur le livre physique. Le scan ouvre
-        automatiquement les informations du livre.
-      </p>
-
-      <div class="modal-actions">
-        <button id="btn-telecharger-qr" type="button">
-          Télécharger
-        </button>
-
-        <button id="btn-imprimer-qr" type="button" class="btn-return">
-          Imprimer
-        </button>
+      <div class="button-row">
+        <button id="btn-telecharger-qr" type="button">Télécharger</button>
+        <button id="btn-imprimer-qr" type="button" class="btn btn-purple">Imprimer</button>
       </div>
     </div>
   </div>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
@@ -273,4 +205,4 @@
     await initAdministration();
   </script>
 </body>
-              </html>
+  </html>
