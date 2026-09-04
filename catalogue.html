@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Catalogue | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,15 +16,16 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
-
-        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
-        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
+        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
+        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
 
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
-        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
-        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <button id="btn-deconnexion" class="btn btn-danger hidden" type="button">
+          Déconnexion
+        </button>
       </div>
     </div>
   </header>
@@ -33,18 +34,23 @@
     <section class="page-header">
       <p class="eyebrow blue">Bibliothèque</p>
       <h1>Catalogue des livres</h1>
-      <p>Choisissez un livre pour voir ses informations et demander un emprunt.</p>
+      <p>
+        Cliquez sur un livre pour afficher ses informations et demander un
+        emprunt.
+      </p>
     </section>
 
     <section class="content-card">
-      <label class="search-label">
+      <label>
         Rechercher un livre
-        <input id="recherche-livre" type="search" placeholder="Titre, auteur, catégorie ou référence">
+        <input
+          id="recherche-livre"
+          type="search"
+          placeholder="Titre, auteur, catégorie ou référence"
+        >
       </label>
 
-      <div id="liste-livres" class="catalogue-grid">
-        Chargement des livres...
-      </div>
+      <div id="liste-livres" class="catalogue-grid">Chargement…</div>
     </section>
   </main>
 
@@ -60,4 +66,4 @@
     await afficherCatalogue();
   </script>
 </body>
-</html>
+      </html>
