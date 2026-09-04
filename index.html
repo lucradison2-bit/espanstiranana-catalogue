@@ -2,42 +2,99 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <title>Accueil – Bibliothèque</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ESP Antsiranana | Bibliothèque</title>
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
-  <h1>Bienvenue dans la bibliothèque</h1>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
 
-  <div class="stats">
-    <div class="stat-box">
-      <h3>Nombre total de livres</h3>
-      <div id="total-livres" class="valeur">...</div>
+        <a href="espace.html" id="lien-espace" class="hidden">
+          Mon espace
+        </a>
+
+        <a href="administration.html" id="lien-admin" class="hidden">
+          Administration
+        </a>
+      </nav>
+
+      <div class="nav-buttons">
+        <span id="nom-utilisateur" class="nom-utilisateur hidden"></span>
+
+        <a href="connexion.html" id="btn-connexion" class="btn-login">
+          Connexion
+        </a>
+
+        <button id="btn-deconnexion" class="btn-logout hidden" type="button">
+          Déconnexion
+        </button>
+      </div>
     </div>
-    <div class="stat-box">
-      <h3>Livres disponibles</h3>
-      <div id="livres-disponibles" class="valeur">...</div>
-    </div>
-  </div>
+  </header>
 
-  <h2>Liste des livres</h2>
-  <div id="liste-livres" class="livres-liste">Chargement...</div>
+  <main class="page-content">
+    <section class="hero-accueil">
+      <p class="eyebrow">Bibliothèque numérique et physique</p>
+      <h1>Bibliothèque ESP Antsiranana</h1>
+      <p>
+        Consultez le catalogue, scannez les QR codes des livres physiques
+        et envoyez une demande d’emprunt.
+      </p>
+
+      <div class="hero-actions">
+        <a class="btn-primary-link" href="catalogue.html">
+          Voir le catalogue
+        </a>
+
+        <a class="btn-secondary-link" href="livre.html">
+          Scanner un livre
+        </a>
+      </div>
+    </section>
+
+    <section class="stats">
+      <article class="stat-box">
+        <p>Livres enregistrés</p>
+        <strong id="total-livres" class="valeur">...</strong>
+      </article>
+
+      <article class="stat-box">
+        <p>Livres disponibles</p>
+        <strong id="livres-disponibles" class="valeur">...</strong>
+      </article>
+    </section>
+
+    <section class="accueil-livres">
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Catalogue</p>
+          <h2>Liste des livres</h2>
+        </div>
+
+        <a href="catalogue.html" class="voir-tout">
+          Voir tous les livres →
+        </a>
+      </div>
+
+      <div id="liste-livres" class="liste-livres">
+        Chargement des livres...
+      </div>
+    </section>
+  </main>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
     import { chargerAccueil } from './js/accueil.js';
 
-    initMenu();
-    chargerAccueil();
+    await initMenu();
+    await chargerAccueil();
   </script>
 </body>
 </html>
