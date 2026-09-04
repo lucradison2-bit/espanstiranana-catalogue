@@ -1,68 +1,84 @@
-// js/espace.js
 import { getUtilisateurCourant } from './auth.js';
 import { supabase } from './config.js';
 
+const formaterDate = (date) =>
+  date ? new Date(date).toLocaleDateString('fr-FR') : '-';
+
 export async function afficherEspace() {
   const info = await getUtilisateurCourant();
-  if (!info) {
-    window.location.href = 'connexion.html';
+
+  if (!info?.user || !info?.profil) {
+    location.href = 'connexion.html';
     return;
   }
 
-  const { user, profil } = info;
+  const profil = info.profil;
 
-  const elNom = document.getElementById('profil-nom');
-  const elEmail = document.getElementById('profil-email');
-  const elCarteIdentite = document.getElementById('profil-carte-identite');
-  const elCarteEtudiant = document.getElementById('profil-carte-etudiant');
+  document.querySelector('#profil-nom').textContent =
+    `${profil.first_name || ''} ${profil.last_name || ''}`.trim() || '-';
 
-  if (elNom) {
-    elNom.textContent = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
-  }
-  if (elEmail) elEmail.textContent = profil.email || '';
-  if (elCarteIdentite) elCarteIdentite.textContent = profil.carte_identite || 'Non renseignée';
-  if (elCarteEtudiant) elCarteEtudiant.textContent = profil.carte_etudiant || 'Non renseignée';
+  document.querySelector('#profil-email').textContent =
+    profil.email || '-';
 
-  await chargerHistorique(user.id);
-}
+  document.querySelector('#profil-carte-identite').textContent =
+    profil.carte_identite || 'Non renseignée';
 
-async function chargerHistorique(userId) {
-  const { data: emprunts, error } = await supabase
+  document.querySelector('#profil-carte-etudiant').textContent =
+    profil.carte_etudiant || 'Non renseignée';
+
+  document.querySelector('#profil-status').textContent =
+    profil.status || '-';
+
+  const { data, error } = await supabase
     .from('emprunts')
-    .select(`
-      id,
+    .select(
+      `
       statut,
       date_emprunt,
       date_retour_prevu,
       date_retour_reel,
-      livres ( titre, auteur )
-    `)
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
+      penalite,
+      livres(titre)
+    `
+    )
+    .eq('user_id', info.user.id)
+    .order('date_demande', { ascending: false });
+
+  const tbody = document.querySelector('#table-historique tbody');
 
   if (error) {
-    console.error(error);
+    tbody.innerHTML =
+      '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
     return;
   }
 
-  const tbody = document.querySelector('#table-historique tbody');
-  if (!tbody) return;
+  tbody.innerHTML = data?.length
+    ? ''
+    : '<tr><td colspan="6">Aucun emprunt.</td></tr>';
 
-  tbody.innerHTML = '';
-
-  for (const e of emprunts) {
-    const tr = document.createElement('tr');
-    const livre = e.livres;
-
-    tr.innerHTML = `
-      <td>${livre?.titre || '???'}</td>
-      <td>${livre?.auteur || ''}</td>
-      <td>${e.statut}</td>
-      <td>${e.date_emprunt ? new Date(e.date_emprunt).toLocaleDateString() : ''}</td>
-      <td>${e.date_retour_prevu ? new Date(e.date_retour_prevu).toLocaleDateString() : ''}</td>
-      <td>${e.date_retour_reel ? new Date(e.date_retour_reel).toLocaleDateString() : ''}</td>
-    `;
-
-    tbody.appendChild(tr);
-  }
+  data?.forEach((emprunt) => {
+    tbody.insertAdjacentHTML(
+      'beforeend',
+      `
+      <tr>
+        <td>${emprunt.livres?.titre || '-'}</td>
+        <td>
+          <span class="badge badge-${emprunt.statut}">
+            ${emprunt.statut}
+          </span>
+        </td>
+        <td>${formaterDate(emprunt.date_emprunt)}</td>
+        <td>${formaterDate(emprunt.date_retour_prevu)}</td>
+        <td>${formaterDate(emprunt.date_retour_reel)}</td>
+        <td>
+          ${
+            Number(emprunt.penalite || 0) > 0
+              ? `${emprunt.penalite} Ar`
+              : '-'
+          }
+        </td>
+      </tr>
+      `
+    );
+  });
 }
