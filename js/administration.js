@@ -627,27 +627,36 @@ async function chargerTousMembres() {
       `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
 
     tbody.insertAdjacentHTML(
-      'beforeend',
-      `
-      <tr>
-        <td>${echapper(nom)}</td>
-        <td>${echapper(profil.email)}</td>
-        <td>${echapper(profil.role)}</td>
-        <td>
-          <span class="badge badge-${
-            profil.status === 'active'
-              ? 'approved'
-              : profil.status === 'rejected'
-                ? 'rejected'
-                : 'pending'
-          }">
-            ${profil.status}
-          </span>
-        </td>
-        <td>${echapper(profil.carte_identite || '-')}</td>
-        <td>${echapper(profil.carte_etudiant || '-')}</td>
-      </tr>
-      `
-    );
-  });
-                    }
+  'beforeend',
+  `
+  <tr>
+    <td>${echapper(nom)}</td>
+    <td>${echapper(profil.email)}</td>
+    <td>${echapper(profil.role)}</td>
+    <td>
+      <span class="badge badge-${
+        profil.status === 'active'
+          ? 'approved'
+          : profil.status === 'rejected'
+            ? 'rejected'
+            : 'pending'
+      }">
+        ${profil.status}
+      </span>
+    </td>
+    <td>${echapper(profil.carte_identite || '-')}</td>
+    <td>${echapper(profil.carte_etudiant || '-')}</td>
+
+    <td>
+      <button
+        class="btn-delete"
+        data-action="supprimer-utilisateur"
+        data-id="${profil.id}"
+        data-email="${encodeURIComponent(profil.email)}"
+      >
+        Supprimer
+      </button>
+    </td>
+  </tr>
+  `
+);
