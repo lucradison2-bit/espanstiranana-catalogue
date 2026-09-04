@@ -1,4 +1,4 @@
-// auth.js
+// js/auth.js
 import { supabase } from './config.js';
 
 // --- Validations ---
@@ -66,7 +66,6 @@ export async function inscrireUtilisateur({
     throw new Error("L'inscription a échoué (pas de user).");
   }
 
-  // Création du profil
   const { error: profileError } = await supabase.from('profiles').insert({
     id: user.id,
     email,
@@ -75,11 +74,10 @@ export async function inscrireUtilisateur({
     carte_identite: carte_identite || null,
     carte_etudiant: carte_etudiant || null,
     role: 'user',
-    status: 'pending' // vous activerez manuellement ou via un processus
+    status: 'pending'
   });
 
   if (profileError) {
-    // Si échec, on peut supprimer le user auth (optionnel)
     await supabase.auth.admin.deleteUser(user.id);
     throw profileError;
   }
@@ -104,13 +102,12 @@ export async function connecterUtilisateur({ email, password }) {
     throw new Error("La connexion a échoué (pas de user).");
   }
 
-  // Si vous avez activé "Confirm email", vérifiez :
+  // Si "Confirm email" est activé dans Supabase, on vérifie :
   if (!user.email_confirmed_at) {
     await supabase.auth.signOut();
     throw new Error("Veuillez confirmer votre adresse e-mail.");
   }
 
-  // Vérifier le profil
   const { data: profil } = await supabase
     .from('profiles')
     .select('role, status')
@@ -149,4 +146,4 @@ export async function getUtilisateurCourant() {
 
 export async function deconnecterUtilisateur() {
   await supabase.auth.signOut();
-    }
+}
