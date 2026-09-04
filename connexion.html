@@ -1,10 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Connexion | ESP Antsiranana</title>
+
   <link rel="stylesheet" href="css/style.css">
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 
 <body>
@@ -17,10 +20,6 @@
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
       </nav>
-
-      <div class="nav-actions">
-        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
-      </div>
     </div>
   </header>
 
@@ -28,25 +27,50 @@
     <section class="auth-card">
       <p class="eyebrow blue">Espace membre</p>
       <h1>Connexion</h1>
-      <p>Connectez-vous avec votre adresse e-mail et votre mot de passe.</p>
+
+      <p>
+        Connectez-vous avec votre e-mail et votre mot de passe. Un QR code peut
+        remplir le champ e-mail, mais le mot de passe reste obligatoire.
+      </p>
 
       <form id="form-connexion">
         <label>
           Adresse e-mail
-          <input id="email" type="email" required autocomplete="email">
+          <input id="email" type="email" required>
         </label>
 
         <label>
           Mot de passe
-          <input id="password" type="password" required autocomplete="current-password">
+          <input id="password" type="password" required>
         </label>
 
-        <button type="submit">Se connecter</button>
+        <div class="button-row">
+          <button type="submit">Se connecter</button>
+
+          <button
+            id="btn-scanner-email"
+            class="btn btn-outline-blue"
+            type="button"
+          >
+            Scanner QR e-mail
+          </button>
+        </div>
+
+        <div id="scanner-connexion" class="scanner-box hidden"></div>
+
+        <button
+          id="btn-fermer-scan"
+          class="btn btn-danger hidden"
+          type="button"
+        >
+          Fermer la caméra
+        </button>
+
         <p id="message" class="message"></p>
       </form>
 
       <p class="auth-bottom">
-        Vous n’avez pas de compte ?
+        Pas encore de compte ?
         <a href="inscription.html">Créer un compte</a>
       </p>
     </section>
@@ -58,27 +82,85 @@
 
   <script type="module">
     import { connecterUtilisateur } from './js/auth.js';
+    import {
+      ouvrirScanner,
+      fermerScanner
+    } from './js/scanner.js';
 
-    const form = document.getElementById('form-connexion');
-    const message = document.getElementById('message');
+    const form = document.querySelector('#form-connexion');
+    const message = document.querySelector('#message');
+    const box = document.querySelector('#scanner-connexion');
+    const scan = document.querySelector('#btn-scanner-email');
+    const close = document.querySelector('#btn-fermer-scan');
 
-    form.addEventListener('submit', async (event) => {
+    form.onsubmit = async (event) => {
       event.preventDefault();
 
-      message.textContent = '';
-      message.className = 'message';
-
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-
       try {
-        await connecterUtilisateur({ email, password });
-        window.location.href = 'index.html';
+        await connecterUtilisateur({
+          email: document.querySelector('#email').value.trim(),
+          password: document.querySelector('#password').value
+        });
+
+        location.href = 'index.html';
       } catch (error) {
-        message.textContent = error.message || 'Erreur lors de la connexion.';
+        message.textContent = error.message;
         message.className = 'message error';
       }
-    });
+    };
+
+    scan.onclick = async () => {
+      box.classList.remove('hidden');
+      scan.classList.add('hidden');
+      close.classList.remove('hidden');
+
+      await ouvrirScanner({
+        lecteurId: 'scanner-connexion',
+
+        onSuccess: async (value) => {
+          box.classList.add('hidden');
+          scan.classList.remove('hidden');
+          close.classList.add('hidden');
+
+          const email = value.trim();
+
+          if (/^[^s@]+@[^s@]+.[^s@]+$/.test(email)) {
+            document.querySelector('#email').value = email.toLowerCase();
+
+            message.textContent =
+              'E-mail ajouté. Entrez votre mot de passe.';
+
+            message.className = 'message success';
+          } else {
+            message.textContent =
+              "Ce QR code ne contient pas une adresse e-mail valide.";
+
+            message.className = 'message error';
+          }
+        },
+
+        onError: (error) => {
+          console.error(error);
+
+          box.classList.add('hidden');
+          scan.classList.remove('hidden');
+          close.classList.add('hidden');
+
+          message.textContent =
+            "Impossible d'ouvrir la caméra.";
+
+          message.className = 'message error';
+        }
+      });
+    };
+
+    close.onclick = async () => {
+      await fermerScanner();
+
+      box.classList.add('hidden');
+      scan.classList.remove('hidden');
+      close.classList.add('hidden');
+    };
   </script>
 </body>
-</html>
+  </html>
