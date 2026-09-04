@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Livres</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .livre {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+    }
+    .livre h3 {
+      margin: 0 0 6px 0;
+    }
+    .disponible {
+      color: green;
+      font-weight: bold;
+    }
+    .indisponible {
+      color: red;
+      font-weight: bold;
+    }
+    button {
+      margin-top: 8px;
+      padding: 6px 12px;
+    }
+    .message {
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    .error { color: red; }
+    .success { color: green; }
+  </style>
+</head>
+<body>
+  <div id="header-container"></div>
+
+  <h1>Liste des livres</h1>
+
+  <div id="liste-livres">Chargement...</div>
+
+  <script type="module">
+    import { supabase } from './config.js';
+    import { getUtilisateurCourant } from './auth.js';
+
+    async function afficherLivres() {
+      const { data: livres, error } = await supabase
+        .from('livres')
+        .select('*')
+        .order('titre');
+
+      if (error) {
+        console.error(error);
+        document.getElementById('liste-livres').textContent =
+          'Erreur lors du chargement des livres.';
+        return;
+      }
+
+      const container = document.getElementById('liste-livres');
+      container.innerHTML = '';
+
+      if (livres.length === 0) {
+        container.textContent = 'Aucun livre disponible pour le moment.';
+        return;
+      }
+
+      for (const livre of livres) {
+        const div = document.createElement('div');
+        div.className = 'livre';
+
+        const statutClasse = livre.disponible ? 'disponible' : 'indisponible';
+        const statutText = livre.disponible ? 'Disponible' : 'Indisponible';
+
+        div.innerHTML = `
+          <h3>${livre.titre}</h3>
+          <p><strong>Auteur :</strong> ${livre.auteur || 'Non renseigné'}</p>
+          <p><strong>Catégorie :</strong> ${livre.categorie || 'Non renseignée'}</p>
+          <p><strong>Référence :</strong> ${livre.numero_ref || 'Non renseignée'}</p>
+          <p><strong>Résumé :</strong> ${livre.resume || 'Non renseigné'}</p>
+          <p><strong>Statut :</strong> <span class="${statutClasse}">${statutText}</span></p>
+          <div class="actions"></div>
+          <div class="message"></div>
+        `;
+
+        container.appendChild(div);
+
+        const actionsDiv = div.querySelector('.actions');
+        const messageDiv = div.querySelector('.message');
+
+        // Bouton emprunter seulement si disponible
+        if (livre.disponible) {
+          const btnEmprunter = document.createElement('button');
+          btnEmprunter.textContent = 'Emprunter';
+          actionsDiv.appendChild(btnEmprunter);
+
+          btnEmprunter.addEventListener('click', async () => {
+            messageDiv.textContent = '';
+            messageDiv.className = 'message';
+
+            const info = await getUtilisateurCourant();
+
+            if (!info) {
+              messageDiv.textContent = 'Vous devez vous connecter pour emprunter un livre.';
+              messageDiv.classList.add('error');
+              return;
+            }
+
+            const { user, profil } = info;
+
+            if (!profil || profil.status !== 'active') {
+              messageDiv.textContent =
+                "Votre compte n'est pas encore activé par l'administrateur.";
+              messageDiv.classList.add('error');
+              return;
+            }
+
+            // Créer la demande d'emprunt
+            const { error: insertError } = await supabase.from('emprunts').insert({
+              user_id: user.id,
+              livre_id: livre.id,
+              statut: 'pending',
+              date_retour_prevu: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
+            });
+
+            if (insertError) {
+              console.error(insertError);
+              messageDiv.textContent =
+                "Erreur lors de l'envoi de la demande d'emprunt.";
+              messageDiv.classList.add('error');
+            } else {
+              messageDiv.textContent =
+                "Demande d'emprunt envoyée. En attente de validation par l'administrateur.";
+              messageDiv.classList.add('success');
+            }
+          });
+        } else {
+          const span = document.createElement('span');
+          span.textContent = 'Ce livre est actuellement indisponible.';
+          span.style.color = '#666';
+          actionsDiv.appendChild(span);
+        }
+      }
+    }
+
+    afficherLivres();
+  </script>
+</body>
+  </html>
