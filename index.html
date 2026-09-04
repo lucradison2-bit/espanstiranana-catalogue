@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>ESP Antsiranana | Bibliothèque</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ESP Antsiranana | Bibliothèque EIT 2</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
@@ -15,6 +15,7 @@
       <nav class="nav-menu">
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
 
         <a href="espace.html" id="lien-espace" class="hidden">
           Mon espace
@@ -25,69 +26,66 @@
         </a>
       </nav>
 
-      <div class="nav-buttons">
-        <span id="nom-utilisateur" class="nom-utilisateur hidden"></span>
+      <div class="nav-actions">
+        <span id="nom-utilisateur" class="user-name hidden"></span>
 
-        <a href="connexion.html" id="btn-connexion" class="btn-login">
+        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">
           Connexion
         </a>
 
-        <button id="btn-deconnexion" class="btn-logout hidden" type="button">
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
           Déconnexion
         </button>
       </div>
     </div>
   </header>
 
-  <main class="page-content">
-    <section class="hero-accueil">
-      <p class="eyebrow">Bibliothèque numérique et physique</p>
+  <main class="container">
+    <section class="hero">
+      <p class="eyebrow">ESP EIT 2</p>
       <h1>Bibliothèque ESP Antsiranana</h1>
       <p>
-        Consultez le catalogue, scannez les QR codes des livres physiques
+        Consultez les livres, scannez le QR code d’un livre physique
         et envoyez une demande d’emprunt.
       </p>
 
       <div class="hero-actions">
-        <a class="btn-primary-link" href="catalogue.html">
-          Voir le catalogue
-        </a>
-
-        <a class="btn-secondary-link" href="livre.html">
-          Scanner un livre
-        </a>
+        <a href="catalogue.html" class="btn btn-light">Voir le catalogue</a>
+        <a href="livre.html" class="btn btn-hero-outline">Scanner un livre</a>
       </div>
     </section>
 
-    <section class="stats">
-      <article class="stat-box">
+    <section class="stats-grid">
+      <article class="stat-card">
         <p>Livres enregistrés</p>
-        <strong id="total-livres" class="valeur">...</strong>
+        <strong id="total-livres">0</strong>
       </article>
 
-      <article class="stat-box">
+      <article class="stat-card">
         <p>Livres disponibles</p>
-        <strong id="livres-disponibles" class="valeur">...</strong>
+        <strong id="livres-disponibles">0</strong>
       </article>
     </section>
 
-    <section class="accueil-livres">
-      <div class="section-title-row">
+    <section class="content-card">
+      <div class="section-heading">
         <div>
-          <p class="eyebrow">Catalogue</p>
-          <h2>Liste des livres</h2>
+          <p class="eyebrow blue">Catalogue</p>
+          <h2>Livres enregistrés</h2>
         </div>
 
-        <a href="catalogue.html" class="voir-tout">
-          Voir tous les livres →
-        </a>
+        <a href="catalogue.html" class="text-link">Voir tout →</a>
       </div>
 
-      <div id="liste-livres" class="liste-livres">
+      <div id="liste-livres" class="books-list">
         Chargement des livres...
       </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
@@ -97,4 +95,4 @@
     await chargerAccueil();
   </script>
 </body>
-</html>
+  </html>
