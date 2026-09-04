@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Administration | Bibliothèque ESP Antsiranana</title>
+  <title>Administration | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Bibliothèque utilisée pour générer les QR codes -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -37,16 +40,37 @@
     </div>
   </header>
 
-  <!-- Caché jusqu'à la vérification du vrai rôle admin -->
   <main id="contenu-admin" class="hidden page-content">
     <section class="admin-hero">
-      <p class="eyebrow">Espace privé</p>
-      <h1>Administration</h1>
-      <p>Gérez les demandes d’emprunt et les livres de la bibliothèque.</p>
+      <p class="eyebrow">Accès réservé</p>
+      <h1>Administration de la bibliothèque</h1>
+      <p>
+        Validez les comptes, gérez les emprunts, les retours, les pénalités
+        et les QR codes des livres physiques.
+      </p>
     </section>
 
     <section class="admin-card">
-      <h2>Demandes d’emprunt</h2>
+      <h2>Comptes en attente</h2>
+
+      <div class="table-wrapper">
+        <table id="table-comptes">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Carte identité</th>
+              <th>Carte étudiant</th>
+              <th>Décision</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-card">
+      <h2>Demandes et retours de livres</h2>
 
       <div class="table-wrapper">
         <table id="table-demandes">
@@ -54,7 +78,10 @@
             <tr>
               <th>Utilisateur</th>
               <th>Livre</th>
+              <th>Demande</th>
               <th>Statut</th>
+              <th>Retour prévu</th>
+              <th>Pénalité</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -64,28 +91,33 @@
     </section>
 
     <section class="admin-card">
-      <h2>Ajouter un livre</h2>
+      <h2>Ajouter un livre physique</h2>
 
       <form id="form-ajout-livre" class="form-livre">
         <div class="form-grid">
           <label>
-            Titre *
-            <input id="livre-titre" type="text" required />
+            Titre du livre *
+            <input type="text" id="livre-titre" required />
           </label>
 
           <label>
             Auteur
-            <input id="livre-auteur" type="text" />
+            <input type="text" id="livre-auteur" />
           </label>
 
           <label>
-            Référence / code QR
-            <input id="livre-ref" type="text" />
+            Référence unique *
+            <input
+              type="text"
+              id="livre-ref"
+              required
+              placeholder="Exemple : ESP-MATH-001"
+            />
           </label>
 
           <label>
             Catégorie
-            <input id="livre-categorie" type="text" />
+            <input type="text" id="livre-categorie" placeholder="Mathématiques, Informatique..." />
           </label>
         </div>
 
@@ -94,14 +126,16 @@
           <textarea id="livre-resume" rows="4"></textarea>
         </label>
 
-        <button type="submit" class="btn-primary">
-          Ajouter le livre
-        </button>
+        <button type="submit">Ajouter le livre et créer son QR code</button>
       </form>
     </section>
 
     <section class="admin-card">
-      <h2>Livres enregistrés</h2>
+      <h2>Livres et QR codes imprimables</h2>
+      <p class="admin-description">
+        Clique sur « Afficher QR » pour générer le QR code du livre. Ensuite,
+        télécharge-le ou imprime-le et colle-le sur le livre physique.
+      </p>
 
       <div class="table-wrapper">
         <table id="table-livres">
@@ -112,6 +146,7 @@
               <th>Référence</th>
               <th>Catégorie</th>
               <th>Disponibilité</th>
+              <th>QR code</th>
               <th>Action</th>
             </tr>
           </thead>
@@ -121,6 +156,32 @@
     </section>
   </main>
 
+  <!-- Fenêtre QR code -->
+  <div id="modal-qr" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content">
+      <button id="btn-fermer-qr" class="modal-close" type="button" aria-label="Fermer">
+        ×
+      </button>
+
+      <h2 id="qr-titre">QR code du livre</h2>
+      <p id="qr-reference"></p>
+
+      <div id="qrcode-container" class="qrcode-container"></div>
+
+      <p class="qr-help">
+        Imprime ce QR code et colle-le sur le livre physique.
+      </p>
+
+      <button id="btn-telecharger-qr" type="button">
+        Télécharger le QR code
+      </button>
+
+      <button id="btn-imprimer-qr" type="button" class="btn-return">
+        Imprimer le QR code
+      </button>
+    </div>
+  </div>
+
   <script type="module">
     import { initMenu } from './js/commun.js';
     import { initAdministration } from './js/administration.js';
@@ -129,4 +190,4 @@
     await initAdministration();
   </script>
 </body>
-        </html>
+  </html>
