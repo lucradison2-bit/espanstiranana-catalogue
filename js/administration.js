@@ -619,13 +619,13 @@ async function chargerTousMembres() {
 
   if (error) {
     tbody.innerHTML =
-      '<tr><td colspan="6">Erreur lors du chargement des membres.</td></tr>';
+      '<tr><td colspan="7">Erreur lors du chargement des membres.</td></tr>';
     return;
   }
 
   tbody.innerHTML = data.length
     ? ''
-    : '<tr><td colspan="6">Aucun membre.</td></tr>';
+    : '<tr><td colspan="7">Aucun membre.</td></tr>';
 
   data.forEach((profil) => {
     const nom =
@@ -704,7 +704,7 @@ Cette action est irréversible et supprimera aussi ses emprunts.`;
 
     if (errEmprunts) throw errEmprunts;
 
-    // 2. Supprimer le profil (l'user Auth reste, mais le profil disparaît)
+    // 2. Supprimer le profil
     const { error: errProfil } = await supabase
       .from('profiles')
       .delete()
