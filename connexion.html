@@ -4,17 +4,20 @@
   <meta charset="UTF-8" />
   <title>Connexion</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    form { max-width: 350px; margin: auto; }
-    label { display:block; margin-top:10px; }
-    input { width:100%; padding:8px; margin-top:4px; }
-    button { margin-top:15px; padding:10px 20px; }
-    .error { color:red; margin-top:10px; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="catalogue.html">Catalogue</a>
+    <a href="connexion.html" id="btn-connexion">Connexion</a>
+    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
+    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
+    <span id="span-nom-utilisateur"></span>
+  </nav>
+
   <h1>Connexion</h1>
+
   <form id="form-connexion">
     <label>
       E-mail
@@ -35,7 +38,10 @@
   </p>
 
   <script type="module">
-    import { connecterUtilisateur } from './auth.js';
+    import { initMenu } from './js/commun.js';
+    import { connecterUtilisateur } from './js/auth.js';
+
+    initMenu();
 
     const form = document.getElementById('form-connexion');
     const message = document.getElementById('message');
@@ -49,7 +55,7 @@
 
       try {
         await connecterUtilisateur({ email, password });
-        window.location.href = 'accueil.html';
+        window.location.href = 'index.html';
       } catch (err) {
         message.textContent = err.message || "Erreur lors de la connexion.";
       }
