@@ -1,72 +1,31 @@
-<!DOCTYPE html>
-<html lang="fr">
-<head>
-  <meta charset="UTF-8" />
-  <title>Administration</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
-</head>
-<body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+<header class="site-header">
+  <div class="nav-container">
+    <a class="logo" href="index.html">ESP Antsiranana</a>
 
-  <div id="contenu-admin" style="display:none;">
-    <h1>Administration</h1>
+    <nav class="nav-links" aria-label="Navigation principale">
+      <a href="index.html">Accueil</a>
+      <a href="catalogue.html">Catalogue</a>
+      <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
 
-    <section class="section">
-      <h2>Demandes d'emprunt</h2>
-      <table id="table-demandes">
-        <thead>
-          <tr>
-            <th>Utilisateur</th>
-            <th>Livre</th>
-            <th>Statut</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+      <!-- IMPORTANT : caché dans le HTML dès le départ -->
+      <a
+        href="administration.html"
+        id="lien-admin"
+        class="hidden"
+        aria-hidden="true"
+      >
+        Administration
+      </a>
+    </nav>
 
-    <section class="section">
-      <h2>Gestion des livres</h2>
-      <form id="form-ajout-livre">
-        <input id="livre-titre" placeholder="Titre" required />
-        <input id="livre-auteur" placeholder="Auteur" />
-        <input id="livre-resume" placeholder="Résumé" />
-        <input id="livre-ref" placeholder="Numéro de réf" />
-        <input id="livre-categorie" placeholder="Catégorie" />
-        <button type="submit">Ajouter le livre</button>
-      </form>
-
-      <table id="table-livres" style="margin-top:15px;">
-        <thead>
-          <tr>
-            <th>Titre</th>
-            <th>Auteur</th>
-            <th>Référence</th>
-            <th>Catégorie</th>
-            <th>Disponible</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </section>
+    <div class="nav-actions">
+      <span id="span-nom-utilisateur" class="user-name"></span>
+      <a href="connexion.html" id="btn-connexion" class="btn btn-outline">
+        Connexion
+      </a>
+      <button id="btn-deconnexion" class="btn btn-danger hidden" type="button">
+        Déconnexion
+      </button>
+    </div>
   </div>
-
-  <script type="module">
-    import { initMenu } from './js/commun.js';
-    import { initAdministration } from './js/administration.js';
-
-    initMenu();
-    initAdministration();
-  </script>
-</body>
-          </html>
+</header>
