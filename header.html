@@ -18,12 +18,3 @@
   import { initHeader } from './header.js';
   initHeader();
 </script>
-<div id="header-container"></div>
-<script type="module">
-  fetch('header.html')
-    .then(r => r.text())
-    .then(html => {
-      document.getElementById('header-container').innerHTML = html;
-      // re-exécuter le script si nécessaire, ou mieux : mettre le header dans un module partagé
-    });
-</script>
