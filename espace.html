@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Mon espace | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,14 +16,16 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
-        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
-        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
+        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
+        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
 
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
-        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
-        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
+          Déconnexion
+        </button>
       </div>
     </div>
   </header>
@@ -32,11 +34,11 @@
     <section class="page-header">
       <p class="eyebrow blue">Espace membre</p>
       <h1>Mon espace</h1>
-      <p>Consultez vos informations, vos demandes et vos emprunts.</p>
+      <p>Vos informations et vos emprunts.</p>
     </section>
 
     <section class="content-card">
-      <h2>Mes informations</h2>
+      <h2>Mon profil</h2>
 
       <div class="profile-grid">
         <div>
@@ -50,7 +52,7 @@
         </div>
 
         <div>
-          <span>Carte d’identité</span>
+          <span>Carte identité</span>
           <strong id="profil-carte-identite">-</strong>
         </div>
 
@@ -60,7 +62,7 @@
         </div>
 
         <div>
-          <span>Statut du compte</span>
+          <span>Statut</span>
           <strong id="profil-status">-</strong>
         </div>
       </div>
@@ -75,15 +77,16 @@
             <tr>
               <th>Livre</th>
               <th>Statut</th>
-              <th>Date emprunt</th>
+              <th>Emprunt</th>
               <th>Retour prévu</th>
               <th>Retour réel</th>
               <th>Pénalité</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
-              <td colspan="6">Chargement...</td>
+              <td colspan="6">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -103,4 +106,4 @@
     await afficherEspace();
   </script>
 </body>
-  </html>
+          </html>
