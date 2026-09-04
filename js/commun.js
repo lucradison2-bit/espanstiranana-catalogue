@@ -1,49 +1,51 @@
-import { getUtilisateurCourant, deconnecterUtilisateur } from './auth.js';
+import {
+  getUtilisateurCourant,
+  deconnecterUtilisateur
+} from './auth.js';
 
-function montrer(element) {
-  if (element) element.classList.remove('hidden');
-}
-
-function cacher(element) {
-  if (element) element.classList.add('hidden');
-}
+const afficher = (element) => element?.classList.remove('hidden');
+const cacher = (element) => element?.classList.add('hidden');
 
 export async function initMenu() {
-  const lienAdmin = document.getElementById('lien-admin');
-  const lienEspace = document.getElementById('lien-espace');
-  const btnConnexion = document.getElementById('btn-connexion');
-  const btnDeconnexion = document.getElementById('btn-deconnexion');
-  const nomUtilisateur = document.getElementById('nom-utilisateur');
+  const lienAdmin = document.querySelector('#lien-admin');
+  const lienEspace = document.querySelector('#lien-espace');
+  const boutonConnexion = document.querySelector('#btn-connexion');
+  const boutonDeconnexion = document.querySelector('#btn-deconnexion');
+  const nomUtilisateur = document.querySelector('#nom-utilisateur');
 
   cacher(lienAdmin);
   cacher(lienEspace);
-  cacher(btnDeconnexion);
+  cacher(boutonDeconnexion);
   cacher(nomUtilisateur);
-  montrer(btnConnexion);
+  afficher(boutonConnexion);
 
   const info = await getUtilisateurCourant();
 
-  if (!info || !info.user || !info.profil) return;
+  if (!info?.user || !info?.profil) return;
 
-  cacher(btnConnexion);
-  montrer(btnDeconnexion);
-  montrer(lienEspace);
-
-  const nom = `${info.profil.first_name || ''} ${info.profil.last_name || ''}`.trim();
+  cacher(boutonConnexion);
+  afficher(boutonDeconnexion);
+  afficher(lienEspace);
 
   if (nomUtilisateur) {
-    nomUtilisateur.textContent = nom || info.profil.email;
-    montrer(nomUtilisateur);
+    nomUtilisateur.textContent =
+      `${info.profil.first_name || ''} ${info.profil.last_name || ''}`.trim() ||
+      info.profil.email;
+
+    afficher(nomUtilisateur);
   }
 
-  if (info.profil.role === 'admin' && info.profil.status === 'active') {
-    montrer(lienAdmin);
+  if (
+    info.profil.role === 'admin' &&
+    info.profil.status === 'active'
+  ) {
+    afficher(lienAdmin);
   }
 
-  if (btnDeconnexion) {
-    btnDeconnexion.onclick = async () => {
+  if (boutonDeconnexion) {
+    boutonDeconnexion.onclick = async () => {
       await deconnecterUtilisateur();
-      window.location.href = 'index.html';
+      location.href = 'index.html';
     };
   }
 }
@@ -51,14 +53,17 @@ export async function initMenu() {
 export async function verifierAdmin() {
   const info = await getUtilisateurCourant();
 
-  if (!info || !info.user || !info.profil) {
-    window.location.href = 'connexion.html';
+  if (!info?.user || !info?.profil) {
+    location.href = 'connexion.html';
     return false;
   }
 
-  if (info.profil.role !== 'admin' || info.profil.status !== 'active') {
-    alert("Accès réservé à l'administration.");
-    window.location.href = 'index.html';
+  if (
+    info.profil.role !== 'admin' ||
+    info.profil.status !== 'active'
+  ) {
+    alert('Accès réservé aux administrateurs.');
+    location.href = 'index.html';
     return false;
   }
 
