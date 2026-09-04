@@ -1,38 +1,59 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Connexion - Espantsiranana Catalogue</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8" />
+  <title>Connexion</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form { max-width: 350px; margin: auto; }
+    label { display:block; margin-top:10px; }
+    input { width:100%; padding:8px; margin-top:4px; }
+    button { margin-top:15px; padding:10px 20px; }
+    .error { color:red; margin-top:10px; }
+  </style>
 </head>
 <body>
-  <header id="header"></header>
+  <h1>Connexion</h1>
+  <form id="form-connexion">
+    <label>
+      E-mail
+      <input type="email" id="email" required />
+    </label>
 
-  <main class="container narrow">
-    <form id="form-connexion" class="form-card">
-      <h1>Connexion</h1>
-      <p class="muted">Accédez à votre espace utilisateur.</p>
+    <label>
+      Mot de passe
+      <input type="password" id="password" required />
+    </label>
 
-      <label for="email">Adresse e-mail</label>
-      <input id="email" type="email" required>
+    <button type="submit">Se connecter</button>
+    <div id="message" class="error"></div>
+  </form>
 
-      <label for="password">Mot de passe</label>
-      <input id="password" type="password" required>
+  <p>
+    Pas encore de compte ? <a href="inscription.html">S'inscrire</a>
+  </p>
 
-      <button class="button full" type="submit">Se connecter</button>
+  <script type="module">
+    import { connecterUtilisateur } from './auth.js';
 
-      <div id="message"></div>
+    const form = document.getElementById('form-connexion');
+    const message = document.getElementById('message');
 
-      <p class="muted">
-        Pas encore de compte ?
-        <a href="./inscription.html">Créer un compte</a>
-      </p>
-    </form>
-  </main>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.textContent = '';
 
-  <footer id="footer"></footer>
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
 
-  <script type="module" src="./js/auth.js"></script>
+      try {
+        await connecterUtilisateur({ email, password });
+        window.location.href = 'accueil.html';
+      } catch (err) {
+        message.textContent = err.message || "Erreur lors de la connexion.";
+      }
+    });
+  </script>
 </body>
 </html>
