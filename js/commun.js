@@ -1,135 +1,68 @@
-export function escapeHtml(value = '') {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;')
-}
+// js/commun.js
+import { getUtilisateurCourant, deconnecterUtilisateur } from './auth.js';
 
-export function showMessage(element, text, type = '') {
-  if (!element) return
+export async function initMenu() {
+  const btnConnexion = document.getElementById('btn-connexion');
+  const btnDeconnexion = document.getElementById('btn-deconnexion');
+  const lienAdmin = document.getElementById('lien-admin');
+  const spanNom = document.getElementById('span-nom-utilisateur');
 
-  element.innerHTML = `
-    <div class="message ${type}">
-      ${escapeHtml(text)}
-    </div>
-  `
-}
+  const info = await getUtilisateurCourant();
 
-export function formatDate(value) {
-  if (!value) return '-'
-
-  return new Date(value).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
-}
-
-export function formatMoney(value) {
-  return `${Number(value || 0).toLocaleString('fr-FR')} Ar`
-}
-
-export function loanStatusLabel(status) {
-  const labels = {
-    pending: 'Demande en attente',
-    active: 'En cours',
-    overdue: 'En retard',
-    returned: 'Retourné',
-    returned_late: 'Retourné en retard',
-    refused: 'Refusé',
-    lost: 'Perdu',
-    damaged: 'Endommagé',
+  if (!info) {
+    if (btnConnexion) btnConnexion.style.display = 'inline-block';
+    if (btnDeconnexion) btnDeconnexion.style.display = 'none';
+    if (lienAdmin) lienAdmin.style.display = 'none';
+    if (spanNom) spanNom.textContent = '';
+    return;
   }
 
-  return labels[status] || status
-}
+  const { user, profil } = info;
 
-export function bookStatusLabel(status) {
-  const labels = {
-    available: 'Disponible',
-    borrowed: 'Emprunté',
-    lost: 'Perdu',
-    damaged: 'Endommagé',
-    inactive: 'Désactivé',
+  if (btnConnexion) btnConnexion.style.display = 'none';
+  if (btnDeconnexion) btnDeconnexion.style.display = 'inline-block';
+
+  if (spanNom && profil) {
+    spanNom.textContent = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
   }
 
-  return labels[status] || status
-}
-
-export async function renderLayout() {
-  const header = document.querySelector('#header')
-  const footer = document.querySelector('#footer')
-
-  if (header) {
-    header.innerHTML = `
-      <div class="header">
-        <a class="logo" href="./index.html">
-          Espantsiranana Catalogue
-        </a>
-
-        <nav class="nav">
-          <a href="./catalogue.html">Catalogue</a>
-          <a href="./espace.html">Mon espace</a>
-          <a href="./administration.html">Administration</a>
-          <button id="logout-button" class="button button-small">
-            Déconnexion
-          </button>
-        </nav>
-      </div>
-    `
+  // Lien admin visible uniquement pour les admins actifs
+  if (
+    profil &&
+    profil.role === 'admin' &&
+    profil.status === 'active'
+  ) {
+    if (lienAdmin) lienAdmin.style.display = 'inline-block';
+  } else {
+    if (lienAdmin) lienAdmin.style.display = 'none';
   }
 
-  if (footer) {
-    footer.innerHTML = `
-      <p>© 2026 Espantsiranana Catalogue</p>
-    `
-  }
-
-  const logout = document.querySelector('#logout-button')
-
-  if (logout) {
-    const { supabase } = await import('./supabase.js')
-
-    logout.addEventListener('click', async () => {
-      await supabase.auth.signOut()
-      window.location.href = './index.html'
-    })
+  if (btnDeconnexion) {
+    btnDeconnexion.addEventListener('click', async (e) => {
+      e.preventDefault();
+      await deconnecterUtilisateur();
+      window.location.reload();
+    });
   }
 }
 
-export async function getCurrentUser() {
-  const { supabase } = await import('./supabase.js')
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  return user
-}
-
-export async function getCurrentProfile() {
-  const { supabase } = await import('./supabase.js')
-  const user = await getCurrentUser()
-
-  if (!user) return null
-
-  const { data } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  return data
-}
-
-export async function requireAdmin() {
-  const profile = await getCurrentProfile()
-
-  if (!profile || profile.role !== 'admin' || profile.status !== 'active') {
-    window.location.href = './connexion.html'
-    return null
+export async function verifierAdmin() {
+  const info = await getUtilisateurCourant();
+  if (!info) {
+    window.location.href = 'connexion.html';
+    return false;
   }
 
-  return profile
-}
+  const { profil } = info;
+  if (
+    !profil ||
+    profil.role !== 'admin' ||
+    profil.status !== 'active'
+  ) {
+    alert("Accès réservé à l'administrateur.");
+    window.location.href = 'index.html';
+    return false;
+  }
+
+  return true;
+    }
