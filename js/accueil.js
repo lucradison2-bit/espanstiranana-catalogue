@@ -1,74 +1,54 @@
-// js/accueil.js
 import { supabase } from './config.js';
 
 function echapperHtml(texte) {
-  const element = document.createElement('div');
-  element.textContent = texte || '';
-  return element.innerHTML;
+  const div = document.createElement('div');
+  div.textContent = texte || '';
+  return div.innerHTML;
 }
 
 export async function chargerAccueil() {
   const { data: livres, error } = await supabase
     .from('livres')
-    .select('id, titre, categorie, auteur, disponible')
-    .order('titre', { ascending: true });
+    .select('id, titre, auteur, categorie, disponible')
+    .order('titre');
 
-  const listeLivres = document.getElementById('liste-livres');
-  const totalLivres = document.getElementById('total-livres');
-  const livresDisponibles = document.getElementById('livres-disponibles');
+  const liste = document.getElementById('liste-livres');
 
   if (error) {
-    console.error('Erreur chargement accueil :', error);
-
-    if (listeLivres) {
-      listeLivres.innerHTML = `
-        <p class="error">Impossible de charger les livres.</p>
-      `;
-    }
-
+    console.error(error);
+    liste.textContent = 'Impossible de charger les livres.';
     return;
   }
 
-  const total = livres?.length || 0;
-  const disponibles = livres?.filter((livre) => livre.disponible).length || 0;
+  document.getElementById('total-livres').textContent = livres.length;
+  document.getElementById('livres-disponibles').textContent =
+    livres.filter((livre) => livre.disponible).length;
 
-  if (totalLivres) totalLivres.textContent = total;
-  if (livresDisponibles) livresDisponibles.textContent = disponibles;
+  liste.innerHTML = '';
 
-  if (!listeLivres) return;
-
-  listeLivres.innerHTML = '';
-
-  if (!livres || livres.length === 0) {
-    listeLivres.innerHTML = `
-      <p class="empty-state">Aucun livre n’est encore enregistré.</p>
-    `;
+  if (livres.length === 0) {
+    liste.textContent = 'Aucun livre enregistré.';
     return;
   }
 
-  for (const livre of livres) {
-    const statut = livre.disponible ? 'Disponible' : 'Indisponible';
-    const classeStatut = livre.disponible ? 'badge-active' : 'badge-rejected';
-
+  for (const livre of livres.slice(0, 8)) {
     const lien = document.createElement('a');
-    lien.className = 'livre-accueil-card';
     lien.href = `livre.html?id=${encodeURIComponent(livre.id)}`;
+    lien.className = 'book-row';
 
     lien.innerHTML = `
-      <div class="livre-accueil-main">
+      <div>
         <h3>${echapperHtml(livre.titre)}</h3>
         <p>
           ${echapperHtml(livre.auteur || 'Auteur non renseigné')}
           ${livre.categorie ? `• ${echapperHtml(livre.categorie)}` : ''}
         </p>
       </div>
-
-      <div class="livre-accueil-side">
-        <span class="badge ${classeStatut}">${statut}</span>
-        <span class="arrow-link">Voir →</span>
-      </div>
+      <span class="badge ${livre.disponible ? 'badge-active' : 'badge-rejected'}">
+        ${livre.disponible ? 'Disponible' : 'Indisponible'}
+      </span>
     `;
 
-    listeLivres.appendChild(lien);
+    liste.appendChild(lien);
   }
 }
