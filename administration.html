@@ -1,12 +1,12 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Administration | ESP Antsiranana</title>
+
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- Générateur de QR code pour les livres physiques -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
@@ -19,35 +19,31 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
-        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
-        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
+        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
+        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
 
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
-        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
-        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
+          Déconnexion
+        </button>
       </div>
     </div>
   </header>
 
   <main id="contenu-admin" class="container hidden">
-    <section class="hero admin-hero">
+    <section class="hero">
       <p class="eyebrow">Accès réservé</p>
       <h1>Administration</h1>
       <p>
-        Gérez les comptes, les emprunts, les dates de retour, les pénalités
-        et les livres physiques.
+        Validation des comptes, emprunts, dates de retour, pénalités et livres.
       </p>
     </section>
 
     <section class="content-card">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow blue">Utilisateurs</p>
-          <h2>Comptes à valider</h2>
-        </div>
-      </div>
+      <h2>Comptes à valider</h2>
 
       <div class="table-wrapper">
         <table id="table-comptes">
@@ -60,9 +56,10 @@
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
-              <td colspan="5">Chargement...</td>
+              <td colspan="5">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -70,16 +67,11 @@
     </section>
 
     <section class="content-card">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow blue">Emprunts</p>
-          <h2>Demandes, dates de retour et pénalités</h2>
-        </div>
-      </div>
+      <h2>Emprunts</h2>
 
       <p class="help-text">
-        L’administrateur choisit la date de retour lors de l’acceptation.
-        Cette date reste modifiable jusqu’au retour du livre.
+        Vous choisissez la date de retour et pouvez la modifier avant le retour
+        du livre.
       </p>
 
       <div class="table-wrapper">
@@ -94,9 +86,10 @@
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
-              <td colspan="6">Chargement...</td>
+              <td colspan="6">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -104,14 +97,9 @@
     </section>
 
     <section class="content-card">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow blue">Catalogue</p>
-          <h2>Ajouter un livre physique</h2>
-        </div>
-      </div>
+      <h2>Ajouter un livre physique</h2>
 
-      <form id="form-ajout-livre" class="admin-form">
+      <form id="form-ajout-livre">
         <div class="form-grid">
           <label>
             Titre *
@@ -125,7 +113,12 @@
 
           <label>
             Référence unique *
-            <input id="livre-ref" type="text" required placeholder="ESP-INFO-001">
+            <input
+              id="livre-ref"
+              type="text"
+              required
+              placeholder="ESP-INFO-001"
+            >
           </label>
 
           <label>
@@ -136,21 +129,17 @@
 
         <label>
           Résumé
-          <textarea id="livre-resume" rows="4"></textarea>
+          <textarea id="livre-resume"></textarea>
         </label>
 
         <button type="submit">Ajouter le livre</button>
+
         <p id="message-livre" class="message"></p>
       </form>
     </section>
 
     <section class="content-card">
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow blue">Livres physiques</p>
-          <h2>Livres et QR codes</h2>
-        </div>
-      </div>
+      <h2>Livres et QR codes</h2>
 
       <div class="table-wrapper">
         <table id="table-livres">
@@ -161,13 +150,14 @@
               <th>Référence</th>
               <th>Catégorie</th>
               <th>Disponibilité</th>
-              <th>QR code</th>
+              <th>QR</th>
               <th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
-              <td colspan="7">Chargement...</td>
+              <td colspan="7">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -175,20 +165,21 @@
     </section>
   </main>
 
-  <!-- Fenêtre QR code -->
   <div id="modal-qr" class="modal hidden">
     <div class="modal-content">
-      <button id="btn-fermer-qr" type="button" class="modal-close">×</button>
+      <button id="btn-fermer-qr" class="modal-close" type="button">×</button>
 
-      <p class="eyebrow blue">Livre physique</p>
       <h2 id="qr-titre">QR code</h2>
+
       <p id="qr-reference" class="help-text"></p>
 
       <div id="qrcode-container" class="qrcode-container"></div>
 
       <div class="button-row">
         <button id="btn-telecharger-qr" type="button">Télécharger</button>
-        <button id="btn-imprimer-qr" type="button" class="btn btn-purple">Imprimer</button>
+        <button id="btn-imprimer-qr" class="btn btn-purple" type="button">
+          Imprimer
+        </button>
       </div>
     </div>
   </div>
@@ -205,4 +196,4 @@
     await initAdministration();
   </script>
 </body>
-  </html>
+</html>
