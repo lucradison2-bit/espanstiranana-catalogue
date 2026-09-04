@@ -1,101 +1,70 @@
-// js/catalogue.js
 import { supabase } from './config.js';
-import { getUtilisateurCourant } from './auth.js';
+
+let tousLesLivres = [];
+
+const echapper = (texte) => {
+  const div = document.createElement('div');
+  div.textContent = texte || '';
+  return div.innerHTML;
+};
 
 export async function afficherCatalogue() {
-  const { data: livres, error } = await supabase
+  const { data, error } = await supabase
     .from('livres')
     .select('*')
     .order('titre');
 
+  const liste = document.querySelector('#liste-livres');
+
   if (error) {
-    console.error(error);
-    const el = document.getElementById('liste-livres');
-    if (el) el.textContent = 'Erreur lors du chargement des livres.';
+    liste.textContent = 'Impossible de charger le catalogue.';
     return;
   }
 
-  const container = document.getElementById('liste-livres');
-  if (!container) return;
+  tousLesLivres = data || [];
+  afficherLivres(tousLesLivres);
 
-  container.innerHTML = '';
+  document.querySelector('#recherche-livre').oninput = (event) => {
+    const recherche = event.target.value.toLowerCase();
 
-  if (livres.length === 0) {
-    container.textContent = 'Aucun livre disponible pour le moment.';
-    return;
-  }
+    const resultat = tousLesLivres.filter((livre) =>
+      [
+        livre.titre,
+        livre.auteur,
+        livre.categorie,
+        livre.numero_ref
+      ]
+        .join(' ')
+        .toLowerCase()
+        .includes(recherche)
+    );
 
-  for (const livre of livres) {
-    const div = document.createElement('div');
-    div.className = 'livre';
+    afficherLivres(resultat);
+  };
+}
 
-    const statutClasse = livre.disponible ? 'disponible' : 'indisponible';
-    const statutText = livre.disponible ? 'Disponible' : 'Indisponible';
+function afficherLivres(livres) {
+  const liste = document.querySelector('#liste-livres');
 
-    div.innerHTML = `
-      <h3>${livre.titre}</h3>
-      <p><strong>Auteur :</strong> ${livre.auteur || 'Non renseigné'}</p>
-      <p><strong>Catégorie :</strong> ${livre.categorie || 'Non renseignée'}</p>
-      <p><strong>Référence :</strong> ${livre.numero_ref || 'Non renseignée'}</p>
-      <p><strong>Statut :</strong> <span class="${statutClasse}">${statutText}</span></p>
-      <div class="actions"></div>
-      <div class="message"></div>
-    `;
+  liste.innerHTML = livres.length ? '' : 'Aucun livre trouvé.';
 
-    container.appendChild(div);
+  livres.forEach((livre) => {
+    liste.insertAdjacentHTML(
+      'beforeend',
+      `
+      <a class="book-card" href="livre.html?id=${encodeURIComponent(livre.id)}">
+        <h3>${echapper(livre.titre)}</h3>
+        <p><b>Auteur :</b> ${echapper(livre.auteur || '-')}</p>
+        <p><b>Catégorie :</b> ${echapper(livre.categorie || '-')}</p>
+        <p><b>Référence :</b> ${echapper(livre.numero_ref || '-')}</p>
 
-    const actionsDiv = div.querySelector('.actions');
-    const messageDiv = div.querySelector('.message');
-
-    if (livre.disponible) {
-      const btnEmprunter = document.createElement('button');
-      btnEmprunter.textContent = 'Emprunter';
-      actionsDiv.appendChild(btnEmprunter);
-
-      btnEmprunter.addEventListener('click', async () => {
-        messageDiv.textContent = '';
-        messageDiv.className = 'message';
-
-        const info = await getUtilisateurCourant();
-
-        if (!info) {
-          messageDiv.textContent = 'Vous devez vous connecter pour emprunter un livre.';
-          messageDiv.classList.add('error');
-          return;
-        }
-
-        const { user, profil } = info;
-
-        if (!profil || profil.status !== 'active') {
-          messageDiv.textContent =
-            "Votre compte n'est pas encore activé par l'administrateur.";
-          messageDiv.classList.add('error');
-          return;
-        }
-
-        const { error: insertError } = await supabase.from('emprunts').insert({
-          user_id: user.id,
-          livre_id: livre.id,
-          statut: 'pending',
-          date_retour_prevu: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
-        });
-
-        if (insertError) {
-          console.error(insertError);
-          messageDiv.textContent =
-            "Erreur lors de l'envoi de la demande d'emprunt.";
-          messageDiv.classList.add('error');
-        } else {
-          messageDiv.textContent =
-            "Demande d'emprunt envoyée. En attente de validation par l'administrateur.";
-          messageDiv.classList.add('success');
-        }
-      });
-    } else {
-      const span = document.createElement('span');
-      span.textContent = 'Ce livre est actuellement indisponible.';
-      span.style.color = '#666';
-      actionsDiv.appendChild(span);
-    }
-  }
-                                         }
+        <span class="badge ${
+          livre.disponible ? 'badge-active' : 'badge-rejected'
+        }">
+          ${livre.disponible ? 'Disponible' : 'Indisponible'}
+        </span>
+      </a>
+      `
+    );
+  });
+}
