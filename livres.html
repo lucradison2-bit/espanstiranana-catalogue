@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Livre | ESP Antsiranana</title>
-  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/style.css">
 
-  <!-- Scanner QR code + code-barres -->
+  <!-- Scanner QR code et code-barres -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 </head>
 
@@ -18,136 +18,107 @@
       <nav class="nav-menu">
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
 
-        <a href="espace.html" id="lien-espace" class="hidden">
-          Mon espace
-        </a>
-
-        <a href="administration.html" id="lien-admin" class="hidden">
-          Administration
-        </a>
+        <a href="espace.html" id="lien-espace" class="hidden">Mon espace</a>
+        <a href="administration.html" id="lien-admin" class="hidden">Administration</a>
       </nav>
 
-      <div class="nav-buttons">
-        <span id="nom-utilisateur" class="nom-utilisateur hidden"></span>
-
-        <a href="connexion.html" id="btn-connexion" class="btn-login">
-          Connexion
-        </a>
-
-        <button id="btn-deconnexion" class="btn-logout hidden" type="button">
-          Déconnexion
-        </button>
+      <div class="nav-actions">
+        <span id="nom-utilisateur" class="user-name hidden"></span>
+        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">Déconnexion</button>
       </div>
     </div>
   </header>
 
-  <main class="page-content">
-    <section class="hero-accueil">
-      <p class="eyebrow">Bibliothèque physique</p>
-      <h1>Scanner un livre</h1>
-      <p>
-        Scannez le QR code ou le code-barres collé sur le livre physique
-        pour afficher immédiatement ses informations.
-      </p>
+  <main class="container">
+    <section class="page-header">
+      <p class="eyebrow blue">Livre physique</p>
+      <h1>Scanner ou rechercher un livre</h1>
+      <p>Scannez le QR code collé sur le livre physique ou entrez sa référence.</p>
     </section>
 
-    <section class="admin-card">
-      <h2>Scanner avec la caméra</h2>
+    <section class="content-card">
+      <h2>Scanner le QR code</h2>
 
-      <div class="scan-actions">
-        <button id="btn-demarrer-scan" type="button">
-          Ouvrir la caméra
-        </button>
-
-        <button id="btn-arreter-scan" type="button" class="btn-reject hidden">
+      <div class="button-row">
+        <button id="btn-demarrer-scan" type="button">Ouvrir la caméra</button>
+        <button id="btn-arreter-scan" type="button" class="btn btn-danger hidden">
           Fermer la caméra
         </button>
       </div>
 
-      <div id="lecteur-qr" class="lecteur-qr hidden"></div>
+      <div id="lecteur-qr" class="scanner-box hidden"></div>
 
-      <p class="small-info">
-        Autorisez l’accès à la caméra. Utilisez de préférence Google Chrome
-        sur téléphone. Le QR code imprimé par l’administration ouvre la fiche
-        du livre automatiquement.
+      <p class="help-text">
+        Autorisez la caméra. Le site doit être ouvert avec GitHub Pages ou HTTPS pour que le scan puisse fonctionner.
       </p>
     </section>
 
-    <section class="admin-card">
+    <section class="content-card">
       <h2>Rechercher par référence</h2>
 
       <label>
         Référence du livre
-        <input
-          id="livre-ref-input"
-          type="text"
-          placeholder="Exemple : ESP-MATH-001"
-        />
+        <input id="livre-ref-input" type="text" placeholder="Exemple : ESP-INFO-001">
       </label>
 
-      <button id="btn-rechercher-ref" type="button">
-        Afficher le livre
-      </button>
-
+      <button id="btn-rechercher-ref" type="button">Afficher le livre</button>
       <p id="message-ref" class="message"></p>
     </section>
 
-    <section id="contenu-livre" class="admin-card hidden"></section>
+    <section id="contenu-livre" class="content-card hidden"></section>
   </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
     import { initMenu } from './js/commun.js';
     import { afficherLivre, ouvrirLivreParReference } from './js/livre.js';
-    import { ouvrirScannerQr, fermerScannerQr } from './js/scanner.js';
+    import { ouvrirScanner, fermerScanner } from './js/scanner.js';
 
     await initMenu();
     await afficherLivre();
 
-    const lecteurQr = document.getElementById('lecteur-qr');
     const btnDemarrer = document.getElementById('btn-demarrer-scan');
     const btnArreter = document.getElementById('btn-arreter-scan');
-    const messageRef = document.getElementById('message-ref');
+    const lecteur = document.getElementById('lecteur-qr');
+    const message = document.getElementById('message-ref');
 
     btnDemarrer.addEventListener('click', async () => {
-      lecteurQr.classList.remove('hidden');
+      lecteur.classList.remove('hidden');
       btnDemarrer.classList.add('hidden');
       btnArreter.classList.remove('hidden');
 
-      messageRef.textContent = 'Caméra ouverte. Placez le QR code dans le cadre.';
-      messageRef.className = 'message success';
+      message.textContent = 'Caméra ouverte. Placez le QR code du livre dans le cadre.';
+      message.className = 'message success';
 
-      await ouvrirScannerQr({
+      await ouvrirScanner({
         lecteurId: 'lecteur-qr',
-
-        onSuccess: async (valeurScannee) => {
-          lecteurQr.classList.add('hidden');
-          btnArreter.classList.add('hidden');
+        onSuccess: async (valeur) => {
+          lecteur.classList.add('hidden');
           btnDemarrer.classList.remove('hidden');
+          btnArreter.classList.add('hidden');
 
-          // QR code généré par le site : contient livre.html?id=UUID
-          if (valeurScannee.includes('livre.html?id=')) {
-            window.location.href = valeurScannee;
+          if (valeur.includes('livre.html?id=')) {
+            window.location.href = valeur;
             return;
           }
 
-          // Si le QR/code-barres contient seulement la référence du livre
-          document.getElementById('livre-ref-input').value = valeurScannee;
-
-          messageRef.textContent = `Code scanné : ${valeurScannee}`;
-          messageRef.className = 'message success';
-
-          await ouvrirLivreParReference(valeurScannee);
+          document.getElementById('livre-ref-input').value = valeur;
+          await ouvrirLivreParReference(valeur);
         },
-
         onError: (error) => {
-          lecteurQr.classList.add('hidden');
-          btnArreter.classList.add('hidden');
+          lecteur.classList.add('hidden');
           btnDemarrer.classList.remove('hidden');
+          btnArreter.classList.add('hidden');
 
-          messageRef.textContent =
-            "Impossible d'ouvrir la caméra. Vérifiez l'autorisation caméra et utilisez HTTPS ou GitHub Pages.";
-          messageRef.className = 'message error';
+          message.textContent =
+            "Impossible d'ouvrir la caméra. Autorisez la caméra et utilisez GitHub Pages/HTTPS.";
+          message.className = 'message error';
 
           console.error(error);
         }
@@ -155,25 +126,20 @@
     });
 
     btnArreter.addEventListener('click', async () => {
-      await fermerScannerQr();
+      await fermerScanner();
 
-      lecteurQr.classList.add('hidden');
-      btnArreter.classList.add('hidden');
+      lecteur.classList.add('hidden');
       btnDemarrer.classList.remove('hidden');
+      btnArreter.classList.add('hidden');
 
-      messageRef.textContent = 'Scanner fermé.';
-      messageRef.className = 'message';
+      message.textContent = 'Scanner fermé.';
+      message.className = 'message';
     });
 
-    document
-      .getElementById('btn-rechercher-ref')
-      .addEventListener('click', async () => {
-        const reference = document
-          .getElementById('livre-ref-input')
-          .value.trim();
-
-        await ouvrirLivreParReference(reference);
-      });
+    document.getElementById('btn-rechercher-ref').addEventListener('click', async () => {
+      const reference = document.getElementById('livre-ref-input').value.trim();
+      await ouvrirLivreParReference(reference);
+    });
   </script>
 </body>
-      </html>
+</html>
