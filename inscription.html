@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Inscription | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -17,10 +17,6 @@
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
       </nav>
-
-      <div class="nav-actions">
-        <a href="connexion.html" class="btn btn-outline">Connexion</a>
-      </div>
     </div>
   </header>
 
@@ -28,9 +24,9 @@
     <section class="auth-card">
       <p class="eyebrow blue">Nouveau membre</p>
       <h1>Créer un compte</h1>
+
       <p>
-        Après l’inscription, confirmez votre e-mail. Votre compte sera ensuite
-        validé par un administrateur.
+        Confirmez votre e-mail puis attendez la validation d’un administrateur.
       </p>
 
       <form id="form-inscription">
@@ -48,7 +44,7 @@
 
         <label>
           Adresse e-mail *
-          <input id="email" type="email" required autocomplete="email">
+          <input id="email" type="email" required>
         </label>
 
         <label>
@@ -57,35 +53,35 @@
             id="password"
             type="password"
             required
-            autocomplete="new-password"
-            placeholder="8 caractères minimum, lettre + chiffre"
+            placeholder="8 caractères, lettre + chiffre"
           >
         </label>
 
         <label>
-          Numéro de carte d’identité
+          Carte d’identité
           <input
             id="carte_identite"
             type="text"
-            placeholder="Facultatif — minimum 12 chiffres si renseigné"
+            placeholder="Facultatif — 12 chiffres minimum"
           >
         </label>
 
         <label>
-          Numéro de carte étudiant
+          Carte étudiant
           <input
             id="carte_etudiant"
             type="text"
-            placeholder="Facultatif — numéro ou code QR"
+            placeholder="Facultatif"
           >
         </label>
 
         <button type="submit">Créer mon compte</button>
+
         <p id="message" class="message"></p>
       </form>
 
       <p class="auth-bottom">
-        Vous avez déjà un compte ?
+        Déjà un compte ?
         <a href="connexion.html">Se connecter</a>
       </p>
     </section>
@@ -98,42 +94,33 @@
   <script type="module">
     import { inscrireUtilisateur } from './js/auth.js';
 
-    const form = document.getElementById('form-inscription');
-    const message = document.getElementById('message');
+    const form = document.querySelector('#form-inscription');
+    const message = document.querySelector('#message');
 
-    form.addEventListener('submit', async (event) => {
+    form.onsubmit = async (event) => {
       event.preventDefault();
-
-      message.textContent = '';
-      message.className = 'message';
-
-      const first_name = document.getElementById('first_name').value.trim();
-      const last_name = document.getElementById('last_name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const password = document.getElementById('password').value;
-      const carte_identite = document.getElementById('carte_identite').value.trim();
-      const carte_etudiant = document.getElementById('carte_etudiant').value.trim();
 
       try {
         await inscrireUtilisateur({
-          first_name,
-          last_name,
-          email,
-          password,
-          carte_identite,
-          carte_etudiant
+          first_name: document.querySelector('#first_name').value,
+          last_name: document.querySelector('#last_name').value,
+          email: document.querySelector('#email').value,
+          password: document.querySelector('#password').value,
+          carte_identite: document.querySelector('#carte_identite').value,
+          carte_etudiant: document.querySelector('#carte_etudiant').value
         });
 
         message.textContent =
-          "Compte créé. Consultez votre e-mail, cliquez sur le lien de confirmation, puis attendez la validation d'un administrateur.";
+          "Compte créé. Confirmez votre e-mail puis attendez la validation de l'administrateur.";
+
         message.className = 'message success';
 
         form.reset();
       } catch (error) {
-        message.textContent = error.message || "Erreur lors de l'inscription.";
+        message.textContent = error.message;
         message.className = 'message error';
       }
-    });
+    };
   </script>
 </body>
 </html>
