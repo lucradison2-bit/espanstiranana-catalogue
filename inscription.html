@@ -1,69 +1,92 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Inscription - Espantsiranana Catalogue</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8" />
+  <title>Inscription</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    form { max-width: 400px; margin: auto; }
+    label { display:block; margin-top:10px; }
+    input { width:100%; padding:8px; margin-top:4px; }
+    button { margin-top:15px; padding:10px 20px; }
+    .error { color:red; margin-top:10px; }
+  </style>
 </head>
 <body>
-  <header id="header"></header>
+  <h1>Inscription</h1>
+  <form id="form-inscription">
+    <label>
+      Prénom
+      <input type="text" id="first_name" required />
+    </label>
 
-  <main class="container narrow">
-    <form id="form-inscription" class="form-card">
-      <h1>Créer un compte</h1>
-      <p class="muted">
-        Votre compte devra être validé par l’administrateur.
-      </p>
+    <label>
+      Nom
+      <input type="text" id="last_name" required />
+    </label>
 
-      <div class="form-grid">
-        <div>
-          <label for="first-name">Prénom</label>
-          <input id="first-name" required>
-        </div>
+    <label>
+      E-mail
+      <input type="email" id="email" required />
+    </label>
 
-        <div>
-          <label for="last-name">Nom</label>
-          <input id="last-name" required>
-        </div>
+    <label>
+      Mot de passe (≥8 caractères, 1 lettre + 1 chiffre)
+      <input type="password" id="password" required />
+    </label>
 
-        <div>
-          <label for="email">Adresse e-mail</label>
-          <input id="email" type="email" required>
-        </div>
+    <label>
+      Numéro de carte d'identité (facultatif, ≥12 chiffres)
+      <input type="text" id="carte_identite" />
+    </label>
 
-        <div>
-          <label for="phone">Téléphone</label>
-          <input id="phone">
-        </div>
+    <label>
+      Numéro de carte étudiant (facultatif, lettres/chiffres ou QR)
+      <input type="text" id="carte_etudiant" />
+    </label>
 
-        <div>
-          <label for="student-card">Carte étudiant</label>
-          <input id="student-card">
-        </div>
+    <button type="submit">S'inscrire</button>
+    <div id="message" class="error"></div>
+  </form>
 
-        <div>
-          <label for="identity-card">Carte d’identité</label>
-          <input id="identity-card">
-        </div>
-      </div>
+  <p>
+    Déjà un compte ? <a href="connexion.html">Se connecter</a>
+  </p>
 
-      <label for="password">Mot de passe</label>
-      <input id="password" type="password" minlength="6" required>
+  <script type="module">
+    import { inscrireUtilisateur } from './auth.js';
 
-      <button class="button full" type="submit">Créer mon compte</button>
+    const form = document.getElementById('form-inscription');
+    const message = document.getElementById('message');
 
-      <div id="message"></div>
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      message.textContent = '';
 
-      <p class="muted">
-        Vous avez déjà un compte ?
-        <a href="./connexion.html">Se connecter</a>
-      </p>
-    </form>
-  </main>
+      const first_name = document.getElementById('first_name').value.trim();
+      const last_name = document.getElementById('last_name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const carte_identite = document.getElementById('carte_identite').value.trim();
+      const carte_etudiant = document.getElementById('carte_etudiant').value.trim();
 
-  <footer id="footer"></footer>
+      try {
+        await inscrireUtilisateur({
+          email,
+          password,
+          first_name,
+          last_name,
+          carte_identite,
+          carte_etudiant
+        });
 
-  <script type="module" src="./js/auth.js"></script>
+        alert("Inscription réussie. Vérifiez vos e-mails si nécessaire.");
+        window.location.href = 'connexion.html';
+      } catch (err) {
+        message.textContent = err.message || "Erreur lors de l'inscription.";
+      }
+    });
+  </script>
 </body>
 </html>
