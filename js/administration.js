@@ -1,383 +1,194 @@
-// js/administration.js
 import { supabase } from './config.js';
 import { verifierAdmin } from './commun.js';
 
-const JOURS_PRET_PAR_DEFAUT = 14;
+const echapper = (texte) => {
+  const div = document.createElement('div');
+  div.textContent = texte || '';
+  return div.innerHTML;
+};
+
+const formaterDate = (date) =>
+  date ? new Date(date).toLocaleDateString('fr-FR') : '-';
+
+const dateDans14Jours = () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 14);
+  return date.toISOString().slice(0, 10);
+};
+
+const convertirDateISO = (date) =>
+  date ? new Date(`${date}T12:00:00`).toISOString() : null;
 
 export async function initAdministration() {
-  const estAdmin = await verifierAdmin();
+  if (!(await verifierAdmin())) return;
 
-  if (!estAdmin) {
-    return;
-  }
-
-  document.getElementById('contenu-admin')?.classList.remove('hidden');
+  document.querySelector('#contenu-admin').classList.remove('hidden');
 
   installerEvenements();
 
   await Promise.all([
-    chargerComptesEnAttente(),
-    chargerDemandes(),
+    chargerComptes(),
+    chargerEmprunts(),
     chargerLivres()
   ]);
 }
 
 function installerEvenements() {
-  document
-    .getElementById('form-ajout-livre')
-    ?.addEventListener('submit', ajouterLivre);
+  document.querySelector('#table-comptes tbody').onclick = actionCompte;
+  document.querySelector('#table-emprunts tbody').onclick = actionEmprunt;
+  document.querySelector('#table-livres tbody').onclick = actionLivre;
 
-  document
-    .querySelector('#table-comptes tbody')
-    ?.addEventListener('click', gererCompte);
+  document.querySelector('#form-ajout-livre').onsubmit = ajouterLivre;
 
-  document
-    .querySelector('#table-demandes tbody')
-    ?.addEventListener('click', gererEmprunt);
-
-  document
-    .querySelector('#table-livres tbody')
-    ?.addEventListener('click', gererLivre);
-
-  document
-    .getElementById('btn-fermer-qr')
-    ?.addEventListener('click', fermerQr);
-
-  document
-    .getElementById('btn-telecharger-qr')
-    ?.addEventListener('click', telechargerQr);
-
-  document
-    .getElementById('btn-imprimer-qr')
-    ?.addEventListener('click', imprimerQr);
-
-  document
-    .getElementById('modal-qr')
-    ?.addEventListener('click', (event) => {
-      if (event.target.id === 'modal-qr') {
-        fermerQr();
-      }
-    });
+  document.querySelector('#btn-fermer-qr').onclick = fermerQR;
+  document.querySelector('#btn-telecharger-qr').onclick = telechargerQR;
+  document.querySelector('#btn-imprimer-qr').onclick = imprimerQR;
 }
 
-function echapperHtml(texte) {
-  const element = document.createElement('div');
-  element.textContent = texte || '';
-  return element.innerHTML;
-}
-
-function formatDate(date) {
-  if (!date) {
-    return '-';
-  }
-
-  return new Date(date).toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-}
-
-function dateInputDans14Jours() {
-  const date = new Date();
-  date.setDate(date.getDate() + JOURS_PRET_PAR_DEFAUT);
-  return date.toISOString().slice(0, 10);
-}
-
-function dateVersInput(date) {
-  if (!date) {
-    return dateInputDans14Jours();
-  }
-
-  return new Date(date).toISOString().slice(0, 10);
-}
-
-function convertirDateInput(dateInput) {
-  if (!dateInput) {
-    return null;
-  }
-
-  return new Date(`${dateInput}T12:00:00`).toISOString();
-}
-
-function afficherMessageLivre(message, type = '') {
-  const zoneMessage = document.getElementById('message-livre');
-
-  if (!zoneMessage) {
-    return;
-  }
-
-  zoneMessage.textContent = message;
-  zoneMessage.className = `message ${type}`.trim();
-}
-
-function construireLienLivre(livreId) {
-  const urlActuelle = new URL(window.location.href);
-
-  return `${urlActuelle.origin}${urlActuelle.pathname.replace(
-    'administration.html',
-    'livre.html'
-  )}?id=${encodeURIComponent(livreId)}`;
-}
-
-/* =========================================================
-   COMPTES UTILISATEURS
-   ========================================================= */
-
-async function chargerComptesEnAttente() {
+async function chargerComptes() {
   const tbody = document.querySelector('#table-comptes tbody');
-
-  if (!tbody) {
-    return;
-  }
 
   const { data, error } = await supabase
     .from('profiles')
-    .select(`
-      id,
-      email,
-      first_name,
-      last_name,
-      carte_identite,
-      carte_etudiant,
-      status,
-      created_at
-    `)
+    .select('*')
     .eq('role', 'user')
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Erreur comptes en attente :', error);
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5">Impossible de charger les comptes.</td>
-      </tr>
-    `;
-
+    tbody.innerHTML =
+      '<tr><td colspan="5">Erreur lors du chargement des comptes.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = '';
+  tbody.innerHTML = data.length
+    ? ''
+    : '<tr><td colspan="5">Aucun compte à valider.</td></tr>';
 
-  if (!data || data.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="5">Aucun compte en attente de validation.</td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  for (const profil of data) {
-    const nomComplet =
-      `${profil.first_name || ''} ${profil.last_name || ''}`.trim() || '-';
+  data.forEach((profil) => {
+    const nom =
+      `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
 
     tbody.insertAdjacentHTML(
       'beforeend',
       `
-        <tr>
-          <td>${echapperHtml(nomComplet)}</td>
-          <td>${echapperHtml(profil.email)}</td>
-          <td>${echapperHtml(profil.carte_identite || '-')}</td>
-          <td>${echapperHtml(profil.carte_etudiant || '-')}</td>
-          <td>
-            <button
-              type="button"
-              class="btn-accept"
-              data-action="accepter-compte"
-              data-id="${profil.id}"
-            >
-              Accepter
-            </button>
+      <tr>
+        <td>${echapper(nom)}</td>
+        <td>${echapper(profil.email)}</td>
+        <td>${echapper(profil.carte_identite || '-')}</td>
+        <td>${echapper(profil.carte_etudiant || '-')}</td>
 
-            <button
-              type="button"
-              class="btn-reject"
-              data-action="refuser-compte"
-              data-id="${profil.id}"
-            >
-              Refuser
-            </button>
-          </td>
-        </tr>
+        <td>
+          <button
+            class="btn-accept"
+            data-action="accepter-compte"
+            data-id="${profil.id}"
+          >
+            Accepter
+          </button>
+
+          <button
+            class="btn-reject"
+            data-action="refuser-compte"
+            data-id="${profil.id}"
+          >
+            Refuser
+          </button>
+        </td>
+      </tr>
       `
     );
-  }
+  });
 }
 
-async function gererCompte(event) {
+async function actionCompte(event) {
   const bouton = event.target.closest('button[data-action]');
 
-  if (!bouton) {
+  if (!bouton) return;
+
+  const action = bouton.dataset.action;
+  const id = bouton.dataset.id;
+
+  if (
+    action === 'refuser-compte' &&
+    !confirm('Voulez-vous refuser ce compte ?')
+  ) {
     return;
   }
 
-  const profilId = bouton.dataset.id;
-  const action = bouton.dataset.action;
+  const status =
+    action === 'accepter-compte' ? 'active' : 'rejected';
 
-  bouton.disabled = true;
+  const { error } = await supabase
+    .from('profiles')
+    .update({ status })
+    .eq('id', id);
 
-  try {
-    if (action === 'accepter-compte') {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'active' })
-        .eq('id', profilId);
-
-      if (error) {
-        throw error;
-      }
-
-      alert('Compte utilisateur accepté et activé.');
-    }
-
-    if (action === 'refuser-compte') {
-      const confirmation = confirm(
-        'Voulez-vous vraiment refuser ce compte utilisateur ?'
-      );
-
-      if (!confirmation) {
-        bouton.disabled = false;
-        return;
-      }
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'rejected' })
-        .eq('id', profilId);
-
-      if (error) {
-        throw error;
-      }
-
-      alert('Compte utilisateur refusé.');
-    }
-
-    await chargerComptesEnAttente();
-  } catch (error) {
-    console.error('Erreur compte utilisateur :', error);
-    alert("Impossible de modifier l'état du compte.");
-  } finally {
-    bouton.disabled = false;
+  if (error) {
+    alert('Erreur lors de la mise à jour du compte.');
   }
+
+  await chargerComptes();
 }
 
-/* =========================================================
-   EMPRUNTS, DATE DE RETOUR ET PENALITES
-   ========================================================= */
-
-async function chargerDemandes() {
-  const tbody = document.querySelector('#table-demandes tbody');
-
-  if (!tbody) {
-    return;
-  }
+async function chargerEmprunts() {
+  const tbody = document.querySelector('#table-emprunts tbody');
 
   const { data, error } = await supabase
     .from('emprunts')
     .select(`
-      id,
-      user_id,
-      livre_id,
-      statut,
-      date_demande,
-      date_emprunt,
-      date_retour_prevu,
-      date_retour_reel,
-      penalite,
-      statut_penalite,
-      note_admin,
-      profiles (
-        first_name,
-        last_name,
-        email
-      ),
-      livres (
-        titre,
-        auteur
-      )
+      *,
+      profiles(first_name, last_name, email),
+      livres(titre)
     `)
     .order('date_demande', { ascending: false });
 
   if (error) {
-    console.error('Erreur chargement emprunts :', error);
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7">Impossible de charger les emprunts.</td>
-      </tr>
-    `;
-
+    tbody.innerHTML =
+      '<tr><td colspan="6">Erreur lors du chargement des emprunts.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = '';
+  tbody.innerHTML = data.length
+    ? ''
+    : '<tr><td colspan="6">Aucun emprunt.</td></tr>';
 
-  if (!data || data.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7">Aucune demande ou aucun emprunt enregistré.</td>
-      </tr>
-    `;
+  data.forEach((emprunt) => {
+    const utilisateur =
+      `${emprunt.profiles?.first_name || ''} ${
+        emprunt.profiles?.last_name || ''
+      }`.trim() ||
+      emprunt.profiles?.email ||
+      '-';
 
-    return;
-  }
+    const dateRetour = emprunt.date_retour_prevu
+      ? new Date(emprunt.date_retour_prevu).toISOString().slice(0, 10)
+      : dateDans14Jours();
 
-  for (const emprunt of data) {
-    const profil = emprunt.profiles;
-    const livre = emprunt.livres;
+    let actions = '-';
 
-    const nomUtilisateur =
-      `${profil?.first_name || ''} ${profil?.last_name || ''}`.trim() ||
-      profil?.email ||
-      'Utilisateur inconnu';
-
-    const dateInput = dateVersInput(emprunt.date_retour_prevu);
-    const montantPenalite = Number(emprunt.penalite || 0);
-
-    let statutAffiche = emprunt.statut;
-    let classeStatut = emprunt.statut;
-
-    const estEnRetard =
-      emprunt.statut === 'approved' &&
-      emprunt.date_retour_prevu &&
-      new Date(emprunt.date_retour_prevu) < new Date();
-
-    if (estEnRetard) {
-      statutAffiche = 'overdue';
-      classeStatut = 'overdue';
-    }
-
-    let actions = '';
-
-    /* Demande pas encore acceptée */
     if (emprunt.statut === 'pending') {
       actions = `
         <label class="table-label">
-          Date de retour choisie par admin
+          Date retour
           <input
+            class="input-date"
+            data-id="${emprunt.id}"
             type="date"
-            class="input-date-retour"
-            data-date-id="${emprunt.id}"
-            value="${dateInput}"
-          />
+            value="${dateRetour}"
+          >
         </label>
 
         <button
-          type="button"
           class="btn-accept"
           data-action="accepter-emprunt"
           data-id="${emprunt.id}"
-          data-livre-id="${emprunt.livre_id}"
+          data-livre="${emprunt.livre_id}"
         >
           Accepter
         </button>
 
         <button
-          type="button"
           class="btn-reject"
           data-action="refuser-emprunt"
           data-id="${emprunt.id}"
@@ -387,363 +198,235 @@ async function chargerDemandes() {
       `;
     }
 
-    /* Emprunt accepté : date modifiable + retour */
     if (emprunt.statut === 'approved') {
       actions = `
         <label class="table-label">
-          Modifier date de retour
+          Modifier date
           <input
+            class="input-date"
+            data-id="${emprunt.id}"
             type="date"
-            class="input-date-retour"
-            data-date-id="${emprunt.id}"
-            value="${dateInput}"
-          />
+            value="${dateRetour}"
+          >
         </label>
 
         <button
-          type="button"
           class="btn-return"
-          data-action="modifier-date"
+          data-action="sauver-date"
           data-id="${emprunt.id}"
         >
-          Enregistrer date
+          Enregistrer
         </button>
 
         <label class="table-label">
-          Pénalité (Ar)
+          Pénalité Ar
           <input
+            class="input-penalite"
+            data-id="${emprunt.id}"
             type="number"
             min="0"
-            step="100"
-            class="input-penalite"
-            data-penalite-id="${emprunt.id}"
-            value="${montantPenalite}"
-          />
+            value="${Number(emprunt.penalite || 0)}"
+          >
         </label>
 
         <button
-          type="button"
           class="btn-return"
-          data-action="livre-retourne"
+          data-action="retour-livre"
           data-id="${emprunt.id}"
-          data-livre-id="${emprunt.livre_id}"
+          data-livre="${emprunt.livre_id}"
         >
           Livre retourné
         </button>
       `;
     }
 
-    /* Livre retourné et éventuellement pénalité */
-    if (emprunt.statut === 'returned') {
+    if (
+      emprunt.statut === 'returned' &&
+      Number(emprunt.penalite) > 0 &&
+      emprunt.statut_penalite !== 'paid'
+    ) {
       actions = `
-        <p class="small-info">
-          Rendu le : <strong>${formatDate(emprunt.date_retour_reel)}</strong>
-        </p>
-      `;
-
-      if (montantPenalite > 0) {
-        actions += `
-          <p class="small-info">
-            Pénalité : <strong>${montantPenalite.toLocaleString('fr-FR')} Ar</strong>
-          </p>
-
-          <p class="small-info">
-            Paiement : <strong>${echapperHtml(emprunt.statut_penalite)}</strong>
-          </p>
-        `;
-
-        if (emprunt.statut_penalite !== 'paid') {
-          actions += `
-            <button
-              type="button"
-              class="btn-accept"
-              data-action="penalite-payee"
-              data-id="${emprunt.id}"
-            >
-              Marquer payée
-            </button>
-          `;
-        }
-      } else {
-        actions += `
-          <p class="small-info">Aucune pénalité.</p>
-        `;
-      }
-    }
-
-    /* Emprunt refusé */
-    if (emprunt.statut === 'rejected') {
-      actions = `
-        <p class="small-info">Demande d’emprunt refusée.</p>
+        <button
+          class="btn-accept"
+          data-action="payer-penalite"
+          data-id="${emprunt.id}"
+        >
+          Pénalité payée
+        </button>
       `;
     }
 
     tbody.insertAdjacentHTML(
       'beforeend',
       `
-        <tr>
-          <td>${echapperHtml(nomUtilisateur)}</td>
-          <td>${echapperHtml(livre?.titre || 'Livre introuvable')}</td>
-          <td>${formatDate(emprunt.date_demande)}</td>
-          <td>
-            <span class="badge badge-${classeStatut}">
-              ${echapperHtml(statutAffiche)}
-            </span>
-          </td>
-          <td>${formatDate(emprunt.date_retour_prevu)}</td>
-          <td>
-            ${
-              montantPenalite > 0
-                ? `${montantPenalite.toLocaleString('fr-FR')} Ar`
-                : '-'
-            }
-          </td>
-          <td class="actions-cell">${actions}</td>
-        </tr>
+      <tr>
+        <td>${echapper(utilisateur)}</td>
+        <td>${echapper(emprunt.livres?.titre || '-')}</td>
+
+        <td>
+          <span class="badge badge-${emprunt.statut}">
+            ${emprunt.statut}
+          </span>
+        </td>
+
+        <td>${formaterDate(emprunt.date_retour_prevu)}</td>
+
+        <td>
+          ${
+            Number(emprunt.penalite || 0) > 0
+              ? `${emprunt.penalite} Ar`
+              : '-'
+          }
+        </td>
+
+        <td class="actions-cell">${actions}</td>
+      </tr>
       `
     );
-  }
+  });
 }
 
-async function gererEmprunt(event) {
+async function actionEmprunt(event) {
   const bouton = event.target.closest('button[data-action]');
 
-  if (!bouton) {
-    return;
-  }
+  if (!bouton) return;
 
   const action = bouton.dataset.action;
-  const empruntId = bouton.dataset.id;
-  const livreId = bouton.dataset.livreId;
-
-  bouton.disabled = true;
+  const id = bouton.dataset.id;
+  const livreId = bouton.dataset.livre;
 
   try {
-    const inputDate = document.querySelector(
-      `.input-date-retour[data-date-id="${empruntId}"]`
-    );
-
-    const dateRetourPrevu = convertirDateInput(inputDate?.value);
-
-    /* Admin accepte l'emprunt et choisit la date de retour */
     if (action === 'accepter-emprunt') {
-      if (!dateRetourPrevu) {
-        throw new Error(
-          "Vous devez choisir une date de retour avant d'accepter l'emprunt."
-        );
+      const date = document.querySelector(
+        `.input-date[data-id="${id}"]`
+      )?.value;
+
+      if (!date) {
+        alert('Choisissez une date de retour.');
+        return;
       }
 
-      const { error: erreurEmprunt } = await supabase
+      let resultat = await supabase
         .from('emprunts')
         .update({
           statut: 'approved',
           date_emprunt: new Date().toISOString(),
-          date_retour_prevu: dateRetourPrevu,
-          note_admin: 'Emprunt accepté par administrateur.'
+          date_retour_prevu: convertirDateISO(date)
         })
-        .eq('id', empruntId);
+        .eq('id', id);
 
-      if (erreurEmprunt) {
-        throw erreurEmprunt;
-      }
+      if (resultat.error) throw resultat.error;
 
-      const { error: erreurLivre } = await supabase
+      resultat = await supabase
         .from('livres')
         .update({ disponible: false })
         .eq('id', livreId);
 
-      if (erreurLivre) {
-        throw erreurLivre;
-      }
-
-      alert(
-        "Emprunt accepté. La date de retour est enregistrée et le livre devient indisponible."
-      );
+      if (resultat.error) throw resultat.error;
     }
 
-    /* Admin refuse une demande */
     if (action === 'refuser-emprunt') {
-      const confirmation = confirm(
-        "Voulez-vous vraiment refuser cette demande d'emprunt ?"
-      );
+      if (!confirm('Voulez-vous refuser cet emprunt ?')) return;
 
-      if (!confirmation) {
-        bouton.disabled = false;
-        return;
-      }
+      const { error } = await supabase
+        .from('emprunts')
+        .update({ statut: 'rejected' })
+        .eq('id', id);
+
+      if (error) throw error;
+    }
+
+    if (action === 'sauver-date') {
+      const date = document.querySelector(
+        `.input-date[data-id="${id}"]`
+      )?.value;
 
       const { error } = await supabase
         .from('emprunts')
         .update({
-          statut: 'rejected',
-          note_admin: 'Demande refusée par administrateur.'
+          date_retour_prevu: convertirDateISO(date)
         })
-        .eq('id', empruntId);
+        .eq('id', id);
 
-      if (error) {
-        throw error;
-      }
-
-      alert('Demande d’emprunt refusée.');
+      if (error) throw error;
     }
 
-    /* Admin peut modifier la date de retour après acceptation */
-    if (action === 'modifier-date') {
-      if (!dateRetourPrevu) {
-        throw new Error('Choisissez une date de retour valide.');
-      }
-
-      const { error } = await supabase
-        .from('emprunts')
-        .update({
-          date_retour_prevu: dateRetourPrevu,
-          note_admin: 'Date de retour modifiée par administrateur.'
-        })
-        .eq('id', empruntId);
-
-      if (error) {
-        throw error;
-      }
-
-      alert('Date de retour modifiée avec succès.');
-    }
-
-    /* Retour livre + pénalité choisie par admin */
-    if (action === 'livre-retourne') {
-      const inputPenalite = document.querySelector(
-        `.input-penalite[data-penalite-id="${empruntId}"]`
+    if (action === 'retour-livre') {
+      const penalite = Number(
+        document.querySelector(
+          `.input-penalite[data-id="${id}"]`
+        )?.value || 0
       );
 
-      const penalite = Number(inputPenalite?.value || 0);
-
-      if (penalite < 0) {
-        throw new Error('La pénalité ne peut pas être négative.');
-      }
-
-      const { error: erreurEmprunt } = await supabase
+      let resultat = await supabase
         .from('emprunts')
         .update({
           statut: 'returned',
           date_retour_reel: new Date().toISOString(),
           penalite,
-          statut_penalite: penalite > 0 ? 'pending' : 'none',
-          note_admin:
-            penalite > 0
-              ? `Livre retourné avec une pénalité de ${penalite} Ar.`
-              : 'Livre retourné sans pénalité.'
+          statut_penalite: penalite > 0 ? 'pending' : 'none'
         })
-        .eq('id', empruntId);
+        .eq('id', id);
 
-      if (erreurEmprunt) {
-        throw erreurEmprunt;
-      }
+      if (resultat.error) throw resultat.error;
 
-      const { error: erreurLivre } = await supabase
+      resultat = await supabase
         .from('livres')
         .update({ disponible: true })
         .eq('id', livreId);
 
-      if (erreurLivre) {
-        throw erreurLivre;
-      }
-
-      alert('Retour enregistré. Le livre est à nouveau disponible.');
+      if (resultat.error) throw resultat.error;
     }
 
-    /* Admin confirme le paiement d'une pénalité */
-    if (action === 'penalite-payee') {
-      const confirmation = confirm(
-        'Confirmez-vous que cette pénalité a été payée ?'
-      );
-
-      if (!confirmation) {
-        bouton.disabled = false;
-        return;
-      }
-
+    if (action === 'payer-penalite') {
       const { error } = await supabase
         .from('emprunts')
-        .update({
-          statut_penalite: 'paid',
-          note_admin: 'Pénalité payée.'
-        })
-        .eq('id', empruntId);
+        .update({ statut_penalite: 'paid' })
+        .eq('id', id);
 
-      if (error) {
-        throw error;
-      }
-
-      alert('Pénalité marquée comme payée.');
+      if (error) throw error;
     }
 
-    await chargerDemandes();
-    await chargerLivres();
+    await Promise.all([
+      chargerEmprunts(),
+      chargerLivres()
+    ]);
   } catch (error) {
-    console.error('Erreur action emprunt :', error);
-    alert(error.message || "L'action n'a pas pu être enregistrée.");
-  } finally {
-    bouton.disabled = false;
+    console.error(error);
+    alert("L'action a échoué.");
   }
 }
-
-/* =========================================================
-   LIVRES ET QR CODES
-   ========================================================= */
 
 async function ajouterLivre(event) {
   event.preventDefault();
 
-  const titre = document.getElementById('livre-titre').value.trim();
-  const auteur = document.getElementById('livre-auteur').value.trim();
-  const resume = document.getElementById('livre-resume').value.trim();
-  const numeroRef = document.getElementById('livre-ref').value.trim();
-  const categorie = document.getElementById('livre-categorie').value.trim();
-
-  if (!titre || !numeroRef) {
-    afficherMessageLivre(
-      'Le titre et la référence unique sont obligatoires.',
-      'error'
-    );
-    return;
-  }
-
-  afficherMessageLivre('Ajout du livre en cours...');
+  const livre = {
+    titre: document.querySelector('#livre-titre').value.trim(),
+    auteur: document.querySelector('#livre-auteur').value.trim() || null,
+    numero_ref: document.querySelector('#livre-ref').value.trim(),
+    categorie:
+      document.querySelector('#livre-categorie').value.trim() || null,
+    resume: document.querySelector('#livre-resume').value.trim() || null,
+    disponible: true
+  };
 
   const { error } = await supabase
     .from('livres')
-    .insert({
-      titre,
-      auteur: auteur || null,
-      resume: resume || null,
-      numero_ref: numeroRef,
-      categorie: categorie || null,
-      disponible: true
-    });
+    .insert(livre);
+
+  const message = document.querySelector('#message-livre');
 
   if (error) {
-    console.error('Erreur ajout livre :', error);
-
-    if (error.message.toLowerCase().includes('duplicate')) {
-      afficherMessageLivre(
-        'Cette référence existe déjà. Entrez une référence unique.',
-        'error'
-      );
-      return;
-    }
-
-    afficherMessageLivre(
-      "Impossible d'ajouter ce livre. Vérifiez les informations.",
-      'error'
-    );
+    message.textContent =
+      'Erreur : référence déjà utilisée ou accès refusé.';
+    message.className = 'message error';
     return;
   }
 
-  event.target.reset();
+  message.textContent = 'Livre ajouté avec succès.';
+  message.className = 'message success';
 
-  afficherMessageLivre(
-    'Livre ajouté avec succès. Vous pouvez maintenant créer son QR code.',
-    'success'
-  );
+  event.target.reset();
 
   await chargerLivres();
 }
@@ -751,95 +434,171 @@ async function ajouterLivre(event) {
 async function chargerLivres() {
   const tbody = document.querySelector('#table-livres tbody');
 
-  if (!tbody) {
-    return;
-  }
-
   const { data, error } = await supabase
     .from('livres')
     .select('*')
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Erreur chargement livres :', error);
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7">Impossible de charger les livres.</td>
-      </tr>
-    `;
-
+    tbody.innerHTML =
+      '<tr><td colspan="7">Erreur lors du chargement des livres.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = '';
+  tbody.innerHTML = data.length
+    ? ''
+    : '<tr><td colspan="7">Aucun livre enregistré.</td></tr>';
 
-  if (!data || data.length === 0) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7">Aucun livre enregistré.</td>
-      </tr>
-    `;
-
-    return;
-  }
-
-  for (const livre of data) {
-    const disponibilite = livre.disponible ? 'Disponible' : 'Indisponible';
-    const classeDisponibilite = livre.disponible
-      ? 'badge-active'
-      : 'badge-rejected';
-
+  data.forEach((livre) => {
     tbody.insertAdjacentHTML(
       'beforeend',
       `
-        <tr>
-          <td>${echapperHtml(livre.titre)}</td>
-          <td>${echapperHtml(livre.auteur || '-')}</td>
-          <td>${echapperHtml(livre.numero_ref || '-')}</td>
-          <td>${echapperHtml(livre.categorie || '-')}</td>
-          <td>
-            <span class="badge ${classeDisponibilite}">
-              ${disponibilite}
-            </span>
-          </td>
-          <td>
-            <button
-              type="button"
-              class="btn-return"
-              data-action="afficher-qr"
-              data-id="${livre.id}"
-              data-titre="${encodeURIComponent(livre.titre)}"
-              data-reference="${encodeURIComponent(livre.numero_ref || '')}"
-            >
-              QR code
-            </button>
-          </td>
-          <td>
-            <button
-              type="button"
-              class="btn-delete"
-              data-action="supprimer-livre"
-              data-id="${livre.id}"
-            >
-              Supprimer
-            </button>
-          </td>
-        </tr>
+      <tr>
+        <td>${echapper(livre.titre)}</td>
+        <td>${echapper(livre.auteur || '-')}</td>
+        <td>${echapper(livre.numero_ref)}</td>
+        <td>${echapper(livre.categorie || '-')}</td>
+
+        <td>
+          <span class="badge ${
+            livre.disponible ? 'badge-active' : 'badge-rejected'
+          }">
+            ${livre.disponible ? 'Disponible' : 'Indisponible'}
+          </span>
+        </td>
+
+        <td>
+          <button
+            class="btn-return"
+            data-action="qr"
+            data-id="${livre.id}"
+            data-titre="${encodeURIComponent(livre.titre)}"
+            data-reference="${encodeURIComponent(livre.numero_ref)}"
+          >
+            QR
+          </button>
+        </td>
+
+        <td>
+          <button
+            class="btn-delete"
+            data-action="supprimer-livre"
+            data-id="${livre.id}"
+          >
+            Supprimer
+          </button>
+        </td>
+      </tr>
       `
     );
-  }
+  });
 }
 
-async function gererLivre(event) {
+async function actionLivre(event) {
   const bouton = event.target.closest('button[data-action]');
 
-  if (!bouton) {
+  if (!bouton) return;
+
+  if (bouton.dataset.action === 'qr') {
+    afficherQR(
+      bouton.dataset.id,
+      decodeURIComponent(bouton.dataset.titre),
+      decodeURIComponent(bouton.dataset.reference)
+    );
+
     return;
   }
 
-  const action = bouton.dataset.action;
-  const livreId = bouton.dataset.id;
+  if (bouton.dataset.action === 'supprimer-livre') {
+    if (!confirm('Voulez-vous supprimer ce livre ?')) return;
 
-  if (action === 'afficher-qr') {
-    const titre = decodeURIComponent(bouto
+    const { error } = await supabase
+      .from('livres')
+      .delete()
+      .eq('id', bouton.dataset.id);
+
+    if (error) {
+      alert(
+        'Impossible de supprimer ce livre. Il est peut-être lié à un emprunt.'
+      );
+    }
+
+    await chargerLivres();
+  }
+}
+
+function afficherQR(id, titre, reference) {
+  if (typeof QRCode === 'undefined') {
+    alert('La bibliothèque QR code ne peut pas être chargée.');
+    return;
+  }
+
+  document.querySelector('#qr-titre').textContent = titre;
+  document.querySelector('#qr-reference').textContent =
+    `Référence : ${reference}`;
+
+  const conteneur = document.querySelector('#qrcode-container');
+  conteneur.innerHTML = '';
+
+  const lienLivre =
+    `${location.origin}${location.pathname.replace(
+      'administration.html',
+      'livre.html'
+    )}?id=${encodeURIComponent(id)}`;
+
+  new QRCode(conteneur, {
+    text: lienLivre,
+    width: 250,
+    height: 250,
+    colorDark: '#0284c7',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.H
+  });
+
+  document.querySelector('#modal-qr').classList.remove('hidden');
+}
+
+function fermerQR() {
+  document.querySelector('#modal-qr').classList.add('hidden');
+  document.querySelector('#qrcode-container').innerHTML = '';
+}
+
+function telechargerQR() {
+  const image = document.querySelector('#qrcode-container img');
+
+  if (!image) return;
+
+  const lien = document.createElement('a');
+  lien.href = image.src;
+  lien.download = 'qr-code-livre.png';
+  lien.click();
+}
+
+function imprimerQR() {
+  const image = document.querySelector('#qrcode-container img');
+
+  if (!image) return;
+
+  const fenetre = window.open('', '_blank');
+
+  fenetre.document.write(`
+    <!doctype html>
+    <html lang="fr">
+      <head>
+        <meta charset="utf-8">
+        <title>QR code</title>
+      </head>
+
+      <body style="text-align:center;font-family:Arial,sans-serif">
+        <h2>${document.querySelector('#qr-titre').textContent}</h2>
+        <p>${document.querySelector('#qr-reference').textContent}</p>
+        <img src="${image.src}" style="width:280px">
+        <p>Scannez pour consulter ce livre.</p>
+      </body>
+    </html>
+  `);
+
+  fenetre.document.close();
+
+  setTimeout(() => fenetre.print(), 400);
+}
