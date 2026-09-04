@@ -1,36 +1,31 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Catalogue - Espantsiranana Catalogue</title>
-  <link rel="stylesheet" href="./css/style.css">
+  <meta charset="UTF-8" />
+  <title>Catalogue – Bibliothèque</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header id="header"></header>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="catalogue.html">Catalogue</a>
+    <a href="connexion.html" id="btn-connexion">Connexion</a>
+    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
+    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
+    <span id="span-nom-utilisateur"></span>
+  </nav>
 
-  <main class="container">
-    <div class="page-heading">
-      <p class="eyebrow">Bibliothèque numérique</p>
-      <h1>Catalogue des livres</h1>
-      <p>Recherchez un livre par titre, auteur ou référence.</p>
-    </div>
+  <h1>Catalogue des livres</h1>
 
-    <form id="form-recherche" class="search-form">
-      <input
-        id="recherche"
-        type="search"
-        placeholder="Titre, auteur ou référence..."
-      >
-      <button class="button" type="submit">Rechercher</button>
-    </form>
+  <div id="liste-livres">Chargement...</div>
 
-    <div id="message"></div>
-    <div id="resultats" class="books-grid"></div>
-  </main>
+  <script type="module">
+    import { initMenu } from './js/commun.js';
+    import { afficherCatalogue } from './js/catalogue.js';
 
-  <footer id="footer"></footer>
-
-  <script type="module" src="./js/catalogue.js"></script>
+    initMenu();
+    afficherCatalogue();
+  </script>
 </body>
 </html>
