@@ -6,91 +6,81 @@ const ADMINS = [
   'rakoolivert@gmail.com'
 ];
 
-function estAdminEmail(email) {
-  return ADMINS.includes((email || '').trim().toLowerCase());
-}
+const isAdmin = (email) =>
+  ADMINS.includes((email || '').trim().toLowerCase());
 
-export function validerMotDePasse(password) {
-  return (
-    password.length >= 8 &&
-    /[A-Za-z]/.test(password) &&
-    /[0-9]/.test(password)
-  );
-}
+export const validerMotDePasse = (password) =>
+  password.length >= 8 &&
+  /[A-Za-z]/.test(password) &&
+  /[0-9]/.test(password);
 
-export function validerCarteIdentite(valeur) {
-  if (!valeur || valeur.trim() === '') return true;
+export const validerCarteIdentite = (valeur) =>
+  !valeur || valeur.trim() === '' || valeur.replace(/D/g, '').length >= 12;
 
-  return valeur.replace(/D/g, '').length >= 12;
-}
-
-export function validerCarteEtudiant(valeur) {
-  if (!valeur || valeur.trim() === '') return true;
-
-  return /^[A-Za-z0-9_-]+$/.test(valeur);
-}
+export const validerCarteEtudiant = (valeur) =>
+  !valeur || valeur.trim() === '' || /^[A-Za-z0-9_-]+$/.test(valeur);
 
 export async function inscrireUtilisateur({
   first_name,
   last_name,
   email,
   password,
-  carte_identite,
-  carte_etudiant
+  carte_identite = '',
+  carte_etudiant = ''
 }) {
-  const emailNettoye = email.trim().toLowerCase();
+  const e = email.trim().toLowerCase();
 
   if (!validerMotDePasse(password)) {
     throw new Error(
-      'Le mot de passe doit contenir au moins 8 caractères, une lettre et un chiffre.'
+      'Mot de passe : 8 caractères minimum, avec une lettre et un chiffre.'
     );
   }
 
   if (!validerCarteIdentite(carte_identite)) {
-    throw new Error(
-      "La carte d'identité doit contenir au moins 12 chiffres si elle est renseignée."
-    );
+    throw new Error("Carte d'identité : 12 chiffres minimum si renseignée.");
   }
 
   if (!validerCarteEtudiant(carte_etudiant)) {
     throw new Error(
-      'La carte étudiant accepte seulement lettres, chiffres, tirets et _.'
+      'Carte étudiant : utilisez lettres, chiffres, tirets ou underscore.'
     );
   }
 
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: emailNettoye,
+  const redirect = `${location.origin}${location.pathname.replace(
+    'inscription.html',
+    'connexion.html'
+  )}`;
+
+  const { data, error } = await supabase.auth.signUp({
+    email: e,
     password,
     options: {
-      emailRedirectTo: `${window.location.origin}${window.location.pathname.replace(
-        'inscription.html',
-        'connexion.html'
-      )}`
+      emailRedirectTo: redirect
     }
   });
 
-  if (authError) throw authError;
-  if (!authData.user) throw new Error('Impossible de créer le compte.');
+  if (error) throw error;
+  if (!data.user) throw new Error('Création du compte impossible.');
 
-  const admin = estAdminEmail(emailNettoye);
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .upsert(
+      {
+        id: data.user.id,
+        email: e,
+        first_name: first_name.trim(),
+        last_name: last_name.trim(),
+        carte_identite: carte_identite.trim() || null,
+        carte_etudiant: carte_etudiant.trim() || null,
+        role: isAdmin(e) ? 'admin' : 'user',
+        status: isAdmin(e) ? 'active' : 'pending'
+      },
+      { onConflict: 'id' }
+    );
 
-  const { error: profilError } = await supabase.from('profiles').upsert(
-    {
-      id: authData.user.id,
-      email: emailNettoye,
-      first_name: first_name.trim(),
-      last_name: last_name.trim(),
-      carte_identite: carte_identite.trim() || null,
-      carte_etudiant: carte_etudiant.trim() || null,
-      role: admin ? 'admin' : 'user',
-      status: admin ? 'active' : 'pending'
-    },
-    { onConflict: 'id' }
-  );
+  if (profileError) throw profileError;
 
-  if (profilError) throw profilError;
-
-  return authData;
+  return data;
 }
 
 export async function connecterUtilisateur({ email, password }) {
@@ -101,40 +91,32 @@ export async function connecterUtilisateur({ email, password }) {
 
   if (error) {
     if (error.message.toLowerCase().includes('email not confirmed')) {
-      throw new Error(
-        'Votre e-mail n’est pas confirmé. Vérifiez votre boîte e-mail et cliquez sur le lien reçu.'
-      );
+      throw new Error("Confirmez d'abord votre e-mail.");
     }
 
-    throw new Error('Adresse e-mail ou mot de passe incorrect.');
+    throw new Error('E-mail ou mot de passe incorrect.');
   }
-
-  if (!data.user) throw new Error('Connexion impossible.');
 
   if (!data.user.email_confirmed_at) {
     await supabase.auth.signOut();
-
-    throw new Error(
-      "Vous devez confirmer votre adresse e-mail avant de vous connecter."
-    );
+    throw new Error("Confirmez d'abord votre e-mail.");
   }
 
-  const { data: profil, error: profilError } = await supabase
+  const { data: profil, error: profileError } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', data.user.id)
     .single();
 
-  if (profilError || !profil) {
+  if (profileError || !profil) {
     await supabase.auth.signOut();
-    throw new Error('Profil utilisateur introuvable.');
+    throw new Error('Profil introuvable.');
   }
 
   if (profil.status === 'pending') {
     await supabase.auth.signOut();
-
     throw new Error(
-      "Votre e-mail est confirmé, mais votre compte attend la validation d'un administrateur."
+      "Votre compte attend encore la validation d'un administrateur."
     );
   }
 
@@ -163,6 +145,5 @@ export async function getUtilisateurCourant() {
 }
 
 export async function deconnecterUtilisateur() {
-  const { error } = await supabase.auth.signOut();
-  if (error) throw error;
-}
+  return supabase.auth.signOut();
+          }
