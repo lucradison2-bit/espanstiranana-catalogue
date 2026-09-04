@@ -4,22 +4,22 @@
   <meta charset="UTF-8" />
   <title>Administration</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    .section { margin-top: 30px; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 6px 8px; }
-    th { background: #f5f5f5; }
-    button { margin: 4px 4px 0 0; padding: 6px 10px; }
-  </style>
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <div id="header-container"></div>
+  <nav>
+    <a href="index.html">Accueil</a>
+    <a href="catalogue.html">Catalogue</a>
+    <a href="connexion.html" id="btn-connexion">Connexion</a>
+    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
+    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
+    <span id="span-nom-utilisateur"></span>
+  </nav>
 
   <div id="contenu-admin" style="display:none;">
     <h1>Administration</h1>
 
-    <div class="section">
+    <section class="section">
       <h2>Demandes d'emprunt</h2>
       <table id="table-demandes">
         <thead>
@@ -32,9 +32,9 @@
         </thead>
         <tbody></tbody>
       </table>
-    </div>
+    </section>
 
-    <div class="section">
+    <section class="section">
       <h2>Gestion des livres</h2>
       <form id="form-ajout-livre">
         <input id="livre-titre" placeholder="Titre" required />
@@ -58,177 +58,15 @@
         </thead>
         <tbody></tbody>
       </table>
-    </div>
+    </section>
   </div>
 
   <script type="module">
-    import { supabase } from './config.js';
-    import { getUtilisateurCourant } from './auth.js';
+    import { initMenu } from './js/commun.js';
+    import { initAdministration } from './js/administration.js';
 
-    async function verifierAdmin() {
-      const info = await getUtilisateurCourant();
-      if (!info) {
-        window.location.href = 'connexion.html';
-        return;
-      }
-
-      const { profil } = info;
-      if (
-        !profil ||
-        profil.role !== 'admin' ||
-        profil.status !== 'active'
-      ) {
-        alert("Accès réservé à l'administrateur.");
-        window.location.href = 'accueil.html';
-        return;
-      }
-
-      document.getElementById('contenu-admin').style.display = 'block';
-      chargerDemandes();
-      chargerLivres();
-    }
-
-    async function chargerDemandes() {
-      const { data, error } = await supabase
-        .from('emprunts')
-        .select(`
-          id,
-          statut,
-          livres ( titre, auteur ),
-          profiles ( first_name, last_name, email )
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      const tbody = document.querySelector('#table-demandes tbody');
-      tbody.innerHTML = '';
-
-      for (const d of data) {
-        const tr = document.createElement('tr');
-
-        const user = d.profiles;
-        const livre = d.livres;
-        const nom = `${user?.first_name || ''} ${user?.last_name || ''}`.trim() || user?.email || 'Inconnu';
-
-        tr.innerHTML = `
-          <td>${nom}</td>
-          <td>${livre?.titre || '???'}</td>
-          <td>${d.statut}</td>
-          <td>
-            ${d.statut === 'pending' ? `
-              <button data-id="${d.id}" data-action="accept">Accepter</button>
-              <button data-id="${d.id}" data-action="reject">Refuser</button>
-            ` : ''}
-          </td>
-        `;
-
-        tbody.appendChild(tr);
-      }
-
-      tbody.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const id = btn.dataset.id;
-        const action = btn.dataset.action;
-
-        if (action === 'accept') {
-          await supabase
-            .from('emprunts')
-            .update({ statut: 'approved', date_emprunt: new Date().toISOString() })
-            .eq('id', id);
-
-          // Rendre le livre indisponible
-          const { data: emp } = await supabase
-            .from('emprunts')
-            .select('livre_id')
-            .eq('id', id)
-            .single();
-
-          if (emp?.livre_id) {
-            await supabase
-              .from('livres')
-              .update({ disponible: false })
-              .eq('id', emp.livre_id);
-          }
-        } else if (action === 'reject') {
-          await supabase
-            .from('emprunts')
-            .update({ statut: 'rejected' })
-            .eq('id', id);
-        }
-
-        chargerDemandes();
-      });
-    }
-
-    async function chargerLivres() {
-      const { data, error } = await supabase
-        .from('livres')
-        .select('*')
-        .order('titre');
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      const tbody = document.querySelector('#table-livres tbody');
-      tbody.innerHTML = '';
-
-      for (const l of data) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${l.titre}</td>
-          <td>${l.auteur || ''}</td>
-          <td>${l.numero_ref || ''}</td>
-          <td>${l.categorie || ''}</td>
-          <td>${l.disponible ? 'Oui' : 'Non'}</td>
-          <td>
-            <button data-id="${l.id}" data-action="delete">Supprimer</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      }
-
-      tbody.addEventListener('click', async (e) => {
-        const btn = e.target.closest('button');
-        if (!btn || btn.dataset.action !== 'delete') return;
-        const id = btn.dataset.id;
-        if (!confirm('Supprimer ce livre ?')) return;
-
-        await supabase.from('livres').delete().eq('id', id);
-        chargerLivres();
-      });
-    }
-
-    // Ajout de livre
-    document.getElementById('form-ajout-livre').addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const titre = document.getElementById('livre-titre').value.trim();
-      const auteur = document.getElementById('livre-auteur').value.trim();
-      const resume = document.getElementById('livre-resume').value.trim();
-      const numero_ref = document.getElementById('livre-ref').value.trim();
-      const categorie = document.getElementById('livre-categorie').value.trim();
-
-      await supabase.from('livres').insert({
-        titre,
-        auteur: auteur || null,
-        resume: resume || null,
-        numero_ref: numero_ref || null,
-        categorie: categorie || null,
-        disponible: true
-      });
-
-      e.target.reset();
-      chargerLivres();
-    });
-
-    verifierAdmin();
+    initMenu();
+    initAdministration();
   </script>
 </body>
-  </html>
+          </html>
