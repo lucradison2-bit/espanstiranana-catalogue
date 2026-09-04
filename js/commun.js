@@ -1,4 +1,3 @@
-// js/commun.js
 import { getUtilisateurCourant, deconnecterUtilisateur } from './auth.js';
 
 function montrer(element) {
@@ -10,13 +9,12 @@ function cacher(element) {
 }
 
 export async function initMenu() {
-  const btnConnexion = document.getElementById('btn-connexion');
-  const btnDeconnexion = document.getElementById('btn-deconnexion');
   const lienAdmin = document.getElementById('lien-admin');
   const lienEspace = document.getElementById('lien-espace');
+  const btnConnexion = document.getElementById('btn-connexion');
+  const btnDeconnexion = document.getElementById('btn-deconnexion');
   const nomUtilisateur = document.getElementById('nom-utilisateur');
 
-  // Tout ce qui est privé est caché au premier affichage.
   cacher(lienAdmin);
   cacher(lienEspace);
   cacher(btnDeconnexion);
@@ -25,30 +23,21 @@ export async function initMenu() {
 
   const info = await getUtilisateurCourant();
 
-  // Visiteur non connecté.
-  if (!info || !info.user || !info.profil) {
-    return;
-  }
+  if (!info || !info.user || !info.profil) return;
 
-  const { profil } = info;
-
-  // Utilisateur connecté.
   cacher(btnConnexion);
   montrer(btnDeconnexion);
   montrer(lienEspace);
 
-  const nomComplet = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+  const nom = `${info.profil.first_name || ''} ${info.profil.last_name || ''}`.trim();
 
   if (nomUtilisateur) {
-    nomUtilisateur.textContent = nomComplet || profil.email || '';
+    nomUtilisateur.textContent = nom || info.profil.email;
     montrer(nomUtilisateur);
   }
 
-  // Seul admin actif voit le lien Administration.
-  if (profil.role === 'admin' && profil.status === 'active') {
+  if (info.profil.role === 'admin' && info.profil.status === 'active') {
     montrer(lienAdmin);
-  } else {
-    cacher(lienAdmin);
   }
 
   if (btnDeconnexion) {
@@ -67,11 +56,8 @@ export async function verifierAdmin() {
     return false;
   }
 
-  if (
-    info.profil.role !== 'admin' ||
-    info.profil.status !== 'active'
-  ) {
-    alert("Accès réservé à l'administrateur.");
+  if (info.profil.role !== 'admin' || info.profil.status !== 'active') {
+    alert("Accès réservé à l'administration.");
     window.location.href = 'index.html';
     return false;
   }
