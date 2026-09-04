@@ -1,481 +1,306 @@
-/* =========================================================
-   ESP Antsiranana - Catalogue de bibliothèque
-   css/style.css
-   ========================================================= */
-
-:root {
-  --primary: #0f4c5c;
-  --primary-dark: #073b4c;
-  --secondary: #1b998b;
-  --accent: #f4a261;
-  --danger: #c0392b;
-  --danger-dark: #962d22;
-
-  --text: #1f2933;
-  --muted: #667085;
-  --background: #f4f7f8;
-  --white: #ffffff;
-  --border: #d9e2e7;
-
-  --shadow: 0 8px 22px rgba(15, 76, 92, 0.08);
-  --radius: 14px;
-}
-
-/* Reset */
 * {
   box-sizing: border-box;
 }
 
-html {
-  min-height: 100%;
-}
-
 body {
-  min-height: 100vh;
   margin: 0;
-  color: var(--text);
-  background: var(--background);
+  background: #f5f7fa;
+  color: #1f2937;
   font-family: Arial, Helvetica, sans-serif;
-  line-height: 1.55;
 }
 
-/* Utilitaire indispensable pour cacher Admin */
 .hidden {
   display: none !important;
 }
 
-/* En-tête et navigation */
+/* Navigation */
 .site-header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.97);
-  border-bottom: 1px solid var(--border);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .nav-container {
-  width: min(1180px, calc(100% - 32px));
-  min-height: 68px;
-  margin: 0 auto;
+  width: 92%;
+  max-width: 1200px;
+  min-height: 70px;
+  margin: auto;
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 20px;
 }
 
-.logo {
-  color: var(--primary-dark);
+.site-title {
+  color: #0b4f6c;
   text-decoration: none;
-  font-weight: 800;
-  font-size: 1.05rem;
-  white-space: nowrap;
+  font-size: 18px;
+  font-weight: bold;
 }
 
-.nav-links {
+.nav-menu {
   display: flex;
-  align-items: center;
-  gap: 8px;
+  gap: 14px;
   flex: 1;
-  flex-wrap: wrap;
 }
 
-.nav-links a {
-  color: #344054;
+.nav-menu a {
+  color: #374151;
   text-decoration: none;
-  font-size: 0.95rem;
-  font-weight: 600;
-  padding: 8px 10px;
-  border-radius: 8px;
-  transition: background 0.2s ease, color 0.2s ease;
+  padding: 8px 5px;
 }
 
-.nav-links a:hover {
-  color: var(--primary-dark);
-  background: #eaf3f4;
+.nav-menu a:hover {
+  color: #0b4f6c;
 }
 
-.nav-actions {
+.nav-buttons {
   display: flex;
-  align-items: center;
   gap: 10px;
-  margin-left: auto;
-  white-space: nowrap;
 }
 
-.user-name {
-  max-width: 180px;
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 0.9rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Zone générale */
-main,
-.page-container {
-  width: min(1180px, calc(100% - 32px));
-  margin: 32px auto 48px;
-}
-
-body > h1,
-body > h2,
-body > h3,
-body > p,
-body > form,
-body > section,
-body > table,
-body > .stats,
-body > .livres-liste,
-body > #liste-livres,
-body > #contenu-livre,
-body > #contenu-admin {
-  width: min(1180px, calc(100% - 32px));
-  margin-right: auto;
-  margin-left: auto;
-}
-
-/* Titres */
-h1,
-h2,
-h3 {
-  color: var(--primary-dark);
-  line-height: 1.2;
-}
-
-h1 {
-  margin-top: 32px;
-  margin-bottom: 10px;
-  font-size: clamp(1.7rem, 4vw, 2.4rem);
-}
-
-h2 {
-  margin-top: 32px;
-  margin-bottom: 14px;
-  font-size: 1.35rem;
-}
-
-h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-}
-
-p {
-  color: #475467;
-}
-
-/* Boutons */
-button,
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 40px;
+.btn-login,
+.btn-logout,
+button {
   padding: 9px 14px;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  background: var(--primary);
-  color: var(--white);
+  border: 0;
+  border-radius: 5px;
   cursor: pointer;
-  font: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-  line-height: 1;
+  font-size: 14px;
   text-decoration: none;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn-login {
+  background: #0b4f6c;
+  color: white;
+}
+
+.btn-logout {
+  background: #dc2626;
+  color: white;
+}
+
+button {
+  background: #0b4f6c;
+  color: white;
 }
 
 button:hover,
-.btn:hover {
-  background: var(--primary-dark);
-  box-shadow: 0 5px 14px rgba(7, 59, 76, 0.18);
-  transform: translateY(-1px);
+.btn-login:hover {
+  background: #083b51;
 }
 
-.btn-outline {
-  border-color: var(--primary);
-  background: transparent;
-  color: var(--primary);
+/* Pages */
+.page-content,
+body > h1,
+body > h2,
+body > p,
+body > section,
+body > form,
+body > table,
+body > .stats,
+body > #liste-livres,
+body > #contenu-livre {
+  width: 92%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.btn-outline:hover {
-  background: var(--primary);
-  color: var(--white);
+h1 {
+  margin-top: 30px;
+  color: #0b4f6c;
 }
 
-.btn-danger {
-  background: var(--danger);
+h2 {
+  color: #0b4f6c;
 }
 
-.btn-danger:hover {
-  background: var(--danger-dark);
+.admin-hero {
+  margin-top: 30px;
+  padding: 25px;
+  border-radius: 8px;
+  background: #eaf4f8;
 }
 
-/* Cartes statistiques */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(180px, 1fr));
-  gap: 18px;
-  margin-top: 22px;
+.admin-hero h1 {
+  margin: 0 0 8px;
 }
 
-.stat-box {
-  min-height: 132px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow);
+.eyebrow {
+  margin: 0 0 8px;
+  color: #0b4f6c;
+  font-size: 13px;
+  font-weight: bold;
+  text-transform: uppercase;
 }
 
-.stat-box h3 {
-  margin-bottom: 14px;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.stat-box .valeur {
-  color: var(--primary);
-  font-size: 2rem;
-  font-weight: 800;
-}
-
-/* Liste accueil */
-.livres-liste {
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow);
-}
-
-.livre-item {
-  padding: 14px 18px;
-  border-bottom: 1px solid #edf1f3;
-}
-
-.livre-item:last-child {
-  border-bottom: 0;
-}
-
-.titre {
-  color: var(--primary-dark);
-  font-weight: 750;
-}
-
-.categorie {
-  margin-left: 8px;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-/* Livres du catalogue */
+/* Cartes et formulaires */
+.admin-card,
+section,
 .livre,
 #contenu-livre,
-section {
-  margin-top: 16px;
-  margin-bottom: 16px;
-  padding: 20px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow);
-}
-
-.livre h3 {
-  color: var(--primary-dark);
-  font-size: 1.2rem;
-}
-
-.livre p {
-  margin: 7px 0;
-}
-
-.actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-.message,
-#message,
-#message-ref {
-  min-height: 22px;
-  margin-top: 10px;
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-
-.error {
-  color: #b42318;
-}
-
-.success {
-  color: #087443;
-}
-
-.disponible {
-  color: #087443;
-  font-weight: 800;
-}
-
-.indisponible {
-  color: #b42318;
-  font-weight: 800;
-}
-
-/* Formulaires */
 form {
-  width: min(540px, calc(100% - 32px));
-  margin: 24px auto;
-  padding: 24px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow);
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+}
+
+form {
+  max-width: 600px;
 }
 
 label {
   display: block;
-  margin-top: 16px;
-  color: #344054;
-  font-size: 0.93rem;
-  font-weight: 700;
-}
-
-label:first-child {
-  margin-top: 0;
+  margin-top: 12px;
+  font-weight: bold;
 }
 
 input,
-select,
 textarea {
   width: 100%;
-  margin-top: 7px;
-  padding: 11px 12px;
-  outline: none;
-  border: 1px solid #cbd5dc;
-  border-radius: 9px;
-  background: var(--white);
-  color: var(--text);
-  font: inherit;
-  font-size: 0.95rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 5px;
+  font-size: 14px;
 }
 
-input:focus,
-select:focus,
-textarea:focus {
-  border-color: var(--secondary);
-  box-shadow: 0 0 0 3px rgba(27, 153, 139, 0.16);
+textarea {
+  resize: vertical;
 }
 
-form button {
-  margin-top: 20px;
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+/* Statistiques */
+.stats {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.stat-box {
+  min-width: 200px;
+  padding: 20px;
+  border-radius: 8px;
+  background: white;
+  border: 1px solid #e5e7eb;
+}
+
+.valeur {
+  color: #0b4f6c;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+/* Livres */
+.livre {
+  margin-bottom: 15px;
+}
+
+.livre h3 {
+  color: #0b4f6c;
+}
+
+.disponible {
+  color: #15803d;
+  font-weight: bold;
+}
+
+.indisponible {
+  color: #dc2626;
+  font-weight: bold;
+}
+
+.error {
+  color: #dc2626;
+}
+
+.success {
+  color: #15803d;
+}
+
+.actions {
+  margin-top: 12px;
 }
 
 /* Tableaux */
+.table-wrapper {
+  overflow-x: auto;
+}
+
 table {
-  width: min(1180px, calc(100% - 32px));
-  margin: 16px auto;
-  overflow: hidden;
-  border: 1px solid var(--border);
-  border-collapse: separate;
-  border-spacing: 0;
-  border-radius: var(--radius);
-  background: var(--white);
-  box-shadow: var(--shadow);
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
 }
 
 th,
 td {
-  padding: 13px 14px;
-  border-bottom: 1px solid #edf1f3;
-  color: #344054;
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
   text-align: left;
-  vertical-align: middle;
-  font-size: 0.92rem;
 }
 
 th {
-  background: #edf6f6;
-  color: var(--primary-dark);
-  font-weight: 800;
+  background: #eaf4f8;
+  color: #0b4f6c;
 }
 
-tr:last-child td {
-  border-bottom: 0;
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: bold;
 }
 
-td button {
-  min-height: 34px;
-  margin: 2px;
-  padding: 7px 10px;
-  font-size: 0.82rem;
+.badge-pending {
+  background: #fef3c7;
+  color: #92400e;
 }
 
-/* Administration */
-#contenu-admin {
-  margin-top: 30px;
+.badge-approved,
+.badge-returned {
+  background: #dcfce7;
+  color: #166534;
 }
 
-.section {
-  margin-top: 28px;
+.badge-rejected {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-/* Adaptation mobile */
-@media (max-width: 760px) {
+.btn-accept {
+  background: #15803d;
+}
+
+.btn-reject,
+.btn-delete {
+  background: #dc2626;
+}
+
+.btn-return {
+  background: #2563eb;
+}
+
+@media (max-width: 700px) {
   .nav-container {
-    width: min(100% - 24px, 1180px);
-    padding: 12px 0;
+    padding: 14px 0;
     align-items: flex-start;
     flex-direction: column;
-    gap: 12px;
   }
 
-  .nav-links {
-    width: 100%;
-  }
-
-  .nav-actions {
-    width: 100%;
-    margin-left: 0;
-    justify-content: flex-start;
+  .nav-menu,
+  .nav-buttons {
     flex-wrap: wrap;
   }
 
-  .user-name {
-    max-width: 100%;
-  }
-
-  body > h1,
-  body > h2,
-  body > h3,
-  body > p,
-  body > form,
-  body > section,
-  body > table,
-  body > .stats,
-  body > .livres-liste,
-  body > #liste-livres,
-  body > #contenu-livre,
-  body > #contenu-admin {
-    width: calc(100% - 24px);
-  }
-
-  .stats {
+  .form-grid {
     grid-template-columns: 1fr;
   }
-
-  table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-  }
-
-  form {
-    width: calc(100% - 24px);
-    padding: 18px;
-  }
-  }
+}
