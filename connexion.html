@@ -1,54 +1,72 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Connexion</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion | ESP Antsiranana</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
-  <h1>Connexion</h1>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
+      </nav>
 
-  <form id="form-connexion">
-    <label>
-      E-mail
-      <input type="email" id="email" required />
-    </label>
+      <div class="nav-actions">
+        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">Connexion</a>
+      </div>
+    </div>
+  </header>
 
-    <label>
-      Mot de passe
-      <input type="password" id="password" required />
-    </label>
+  <main class="container narrow">
+    <section class="auth-card">
+      <p class="eyebrow blue">Espace membre</p>
+      <h1>Connexion</h1>
+      <p>Connectez-vous avec votre adresse e-mail et votre mot de passe.</p>
 
-    <button type="submit">Se connecter</button>
-    <div id="message" class="error"></div>
-  </form>
+      <form id="form-connexion">
+        <label>
+          Adresse e-mail
+          <input id="email" type="email" required autocomplete="email">
+        </label>
 
-  <p>
-    Pas encore de compte ? <a href="inscription.html">S'inscrire</a>
-  </p>
+        <label>
+          Mot de passe
+          <input id="password" type="password" required autocomplete="current-password">
+        </label>
+
+        <button type="submit">Se connecter</button>
+        <p id="message" class="message"></p>
+      </form>
+
+      <p class="auth-bottom">
+        Vous n’avez pas de compte ?
+        <a href="inscription.html">Créer un compte</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
-    import { initMenu } from './js/commun.js';
     import { connecterUtilisateur } from './js/auth.js';
-
-    initMenu();
 
     const form = document.getElementById('form-connexion');
     const message = document.getElementById('message');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
       message.textContent = '';
+      message.className = 'message';
 
       const email = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
@@ -56,8 +74,9 @@
       try {
         await connecterUtilisateur({ email, password });
         window.location.href = 'index.html';
-      } catch (err) {
-        message.textContent = err.message || "Erreur lors de la connexion.";
+      } catch (error) {
+        message.textContent = error.message || 'Erreur lors de la connexion.';
+        message.className = 'message error';
       }
     });
   </script>
