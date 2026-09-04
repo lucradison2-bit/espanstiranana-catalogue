@@ -1,103 +1,89 @@
-// js/qr-scanner.js
-export async function demarrerScanQr({
-  containerId,
+// js/scanner.js
+let scannerActif = null;
+
+export async function ouvrirScannerQr({
+  lecteurId,
   onSuccess,
-  onClose
+  onError
 }) {
-  const container = document.getElementById(containerId);
-
-  if (!container) {
-    throw new Error('Zone de scan introuvable.');
+  if (scannerActif) {
+    await fermerScannerQr();
   }
 
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-    throw new Error(
-      "La caméra n'est pas disponible dans ce navigateur."
+  if (typeof Html5Qrcode === 'undefined') {
+    const erreur = new Error(
+      "Le scanner n'est pas chargé. Vérifiez la connexion Internet."
     );
+
+    if (onError) onError(erreur);
+    return;
   }
 
-  const stream = await navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode: { ideal: 'environment' }
-    },
-    audio: false
-  });
+  const lecteur = document.getElementById(lecteurId);
 
-  const video = document.createElement('video');
-  video.setAttribute('playsinline', 'true');
-  video.autoplay = true;
-  video.muted = true;
-  video.srcObject = stream;
+  if (!lecteur) {
+    const erreur = new Error('Zone du scanner introuvable.');
 
-  const canvas = document.createElement('canvas');
-  const contexte = canvas.getContext('2d', { willReadFrequently: true });
+    if (onError) onError(erreur);
+    return;
+  }
 
-  const boutonFermer = document.createElement('button');
-  boutonFermer.type = 'button';
-  boutonFermer.textContent = 'Fermer le scanner';
-  boutonFermer.className = 'btn-reject';
+  scannerActif = new Html5Qrcode(lecteurId);
 
-  container.innerHTML = '';
-  container.appendChild(video);
-  container.appendChild(boutonFermer);
+  try {
+    const cameras = await Html5Qrcode.getCameras();
 
-  await video.play();
-
-  let scannerActif = true;
-
-  function fermer() {
-    scannerActif = false;
-    stream.getTracks().forEach((track) => track.stop());
-    container.innerHTML = '';
-
-    if (typeof onClose === 'function') {
-      onClose();
+    if (!cameras || cameras.length === 0) {
+      throw new Error('Aucune caméra détectée sur cet appareil.');
     }
-  }
 
-  boutonFermer.addEventListener('click', fermer);
+    const cameraArriere =
+      cameras.find((camera) =>
+        /back|rear|environment/i.test(camera.label)
+      ) || cameras[0];
 
-  if (!('BarcodeDetector' in window)) {
-    fermer();
+    await scannerActif.start(
+      cameraArriere.id,
+      {
+        fps: 10,
+        qrbox: { width: 250, height: 250 },
+        aspectRatio: 1
+      },
+      async (texteScanne) => {
+        await fermerScannerQr();
 
-    throw new Error(
-      "Le scan QR n'est pas compatible avec ce navigateur. Utilisez Google Chrome sur Android, ou ouvrez directement le QR code avec l'appareil photo du téléphone."
-    );
-  }
-
-  const detector = new BarcodeDetector({
-    formats: ['qr_code']
-  });
-
-  async function analyserImage() {
-    if (!scannerActif) return;
-
-    if (video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-
-      contexte.drawImage(video, 0, 0, canvas.width, canvas.height);
-
-      try {
-        const codes = await detector.detect(canvas);
-
-        if (codes.length > 0 && codes[0].rawValue) {
-          const valeur = codes[0].rawValue;
-          fermer();
-
-          if (typeof onSuccess === 'function') {
-            onSuccess(valeur);
-          }
-
-          return;
+        if (onSuccess) {
+          onSuccess(texteScanne);
         }
-      } catch (error) {
-        console.error('Erreur scan QR :', error);
+      },
+      () => {
+        // Lecture continue : aucune erreur à afficher ici.
       }
+    );
+  } catch (error) {
+    console.error('Erreur caméra/scan :', error);
+    await fermerScannerQr();
+
+    if (onError) {
+      onError(error);
+    }
+  }
+}
+
+export async function fermerScannerQr() {
+  if (!scannerActif) return;
+
+  try {
+    const etat = scannerActif.getState();
+
+    if (etat === Html5QrcodeScannerState.SCANNING) {
+      await scannerActif.stop();
     }
 
-    requestAnimationFrame(analyserImage);
+    await scannerActif.clear();
+  } catch (error) {
+    console.warn('Fermeture scanner :', error);
+  } finally {
+    scannerActif = null;
   }
-
-  analyserImage();
-        }
+}
