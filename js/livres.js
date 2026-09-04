@@ -1,196 +1,154 @@
-// js/livre.js
 import { supabase } from './config.js';
 import { getUtilisateurCourant } from './auth.js';
 
-function echapperHtml(texte) {
-  const element = document.createElement('div');
-  element.textContent = texte || '';
-  return element.innerHTML;
-}
+const echapper = (texte) => {
+  const div = document.createElement('div');
+  div.textContent = texte || '';
+  return div.innerHTML;
+};
 
-function afficherMessage(message, type = '') {
-  const messageRef = document.getElementById('message-ref');
+function afficherMessage(texte, classe = '') {
+  const zone = document.querySelector('#message-ref');
 
-  if (!messageRef) return;
+  if (!zone) return;
 
-  messageRef.textContent = message;
-  messageRef.className = `message ${type}`.trim();
+  zone.textContent = texte;
+  zone.className = `message ${classe}`;
 }
 
 export async function afficherLivre() {
-  const params = new URLSearchParams(window.location.search);
-  const livreId = params.get('id');
+  const id = new URLSearchParams(location.search).get('id');
 
-  if (!livreId) {
-    return;
-  }
+  if (!id) return;
 
   const { data: livre, error } = await supabase
     .from('livres')
     .select('*')
-    .eq('id', livreId)
+    .eq('id', id)
     .single();
 
   if (error || !livre) {
-    console.error('Erreur livre :', error);
     afficherMessage('Livre introuvable.', 'error');
     return;
   }
 
-  afficherInformationsLivre(livre);
+  afficherFicheLivre(livre);
 }
 
 export async function ouvrirLivreParReference(reference) {
-  const valeur = (reference || '').trim();
-
-  if (!valeur) {
-    afficherMessage('Saisissez ou scannez une référence de livre.', 'error');
+  if (!reference) {
+    afficherMessage('Saisissez une référence.', 'error');
     return;
   }
 
   const { data: livre, error } = await supabase
     .from('livres')
     .select('*')
-    .eq('numero_ref', valeur)
+    .eq('numero_ref', reference.trim())
     .single();
 
   if (error || !livre) {
-    console.error('Erreur recherche référence :', error);
     afficherMessage(
-      'Aucun livre ne correspond à cette référence ou ce code-barres.',
+      'Aucun livre ne correspond à cette référence.',
       'error'
     );
     return;
   }
 
   afficherMessage(`Livre trouvé : ${livre.titre}`, 'success');
-  afficherInformationsLivre(livre);
 
-  window.history.replaceState(
+  history.replaceState(
     {},
     '',
     `livre.html?id=${encodeURIComponent(livre.id)}`
   );
+
+  afficherFicheLivre(livre);
 }
 
-function afficherInformationsLivre(livre) {
-  const container = document.getElementById('contenu-livre');
+function afficherFicheLivre(livre) {
+  const contenu = document.querySelector('#contenu-livre');
 
-  if (!container) return;
+  contenu.classList.remove('hidden');
 
-  container.classList.remove('hidden');
+  contenu.innerHTML = `
+    <p class="eyebrow blue">Informations du livre</p>
 
-  const statut = livre.disponible ? 'Disponible' : 'Indisponible';
-  const classeStatut = livre.disponible ? 'badge-active' : 'badge-rejected';
+    <h2>${echapper(livre.titre)}</h2>
 
-  container.innerHTML = `
-    <p class="eyebrow">Informations du livre</p>
-    <h2>${echapperHtml(livre.titre)}</h2>
+    <div class="details-grid">
+      <p><b>Auteur :</b> ${echapper(livre.auteur || '-')}</p>
+      <p><b>Catégorie :</b> ${echapper(livre.categorie || '-')}</p>
+      <p><b>Référence :</b> ${echapper(livre.numero_ref || '-')}</p>
 
-    <div class="fiche-livre-grid">
-      <p><strong>Auteur :</strong> ${echapperHtml(livre.auteur || 'Non renseigné')}</p>
-      <p><strong>Catégorie :</strong> ${echapperHtml(livre.categorie || 'Non renseignée')}</p>
-      <p><strong>Référence :</strong> ${echapperHtml(livre.numero_ref || 'Non renseignée')}</p>
       <p>
-        <strong>Disponibilité :</strong>
-        <span class="badge ${classeStatut}">${statut}</span>
+        <b>Disponibilité :</b>
+        <span class="badge ${
+          livre.disponible ? 'badge-active' : 'badge-rejected'
+        }">
+          ${livre.disponible ? 'Disponible' : 'Indisponible'}
+        </span>
       </p>
     </div>
 
-    <div class="resume-livre">
-      <strong>Résumé</strong>
-      <p>${echapperHtml(livre.resume || 'Aucun résumé renseigné.')}</p>
+    <div class="summary-box">
+      <b>Résumé</b>
+      <p>${echapper(livre.resume || 'Aucun résumé renseigné.')}</p>
     </div>
 
-    <div id="zone-emprunt" class="actions"></div>
+    <div id="zone-emprunt" class="button-row"></div>
+
     <p id="message-emprunt" class="message"></p>
   `;
 
-  if (livre.disponible) {
-    ajouterBoutonEmprunt(livre);
-  } else {
-    const zone = document.getElementById('zone-emprunt');
+  const zoneEmprunt = document.querySelector('#zone-emprunt');
 
-    if (zone) {
-      zone.innerHTML = `
-        <span class="indisponible">
-          Ce livre est actuellement emprunté ou indisponible.
-        </span>
-      `;
-    }
+  if (!livre.disponible) {
+    zoneEmprunt.innerHTML =
+      '<span class="error">Livre indisponible actuellement.</span>';
+    return;
   }
-}
-
-function ajouterBoutonEmprunt(livre) {
-  const zone = document.getElementById('zone-emprunt');
-
-  if (!zone) return;
 
   const bouton = document.createElement('button');
-  bouton.textContent = 'Demander cet emprunt';
-  bouton.type = 'button';
+  bouton.textContent = "Demander l'emprunt";
 
-  bouton.addEventListener('click', async () => {
-    const message = document.getElementById('message-emprunt');
-
-    if (message) {
-      message.textContent = '';
-      message.className = 'message';
-    }
-
+  bouton.onclick = async () => {
+    const message = document.querySelector('#message-emprunt');
     const info = await getUtilisateurCourant();
 
-    if (!info || !info.user) {
-      if (message) {
-        message.textContent = 'Connectez-vous avant de demander un emprunt.';
-        message.classList.add('error');
-      }
-
+    if (!info?.user) {
+      message.textContent =
+        'Connectez-vous avant de demander un emprunt.';
+      message.className = 'message error';
       return;
     }
 
     if (!info.profil || info.profil.status !== 'active') {
-      if (message) {
-        message.textContent =
-          "Votre compte doit être validé par un administrateur avant tout emprunt.";
-        message.classList.add('error');
-      }
-
+      message.textContent =
+        "Votre compte doit être validé par un administrateur.";
+      message.className = 'message error';
       return;
     }
 
-    bouton.disabled = true;
-
-    const { error } = await supabase
-      .from('emprunts')
-      .insert({
-        user_id: info.user.id,
-        livre_id: livre.id,
-        statut: 'pending'
-      });
-
-    bouton.disabled = false;
+    const { error } = await supabase.from('emprunts').insert({
+      user_id: info.user.id,
+      livre_id: livre.id,
+      statut: 'pending'
+    });
 
     if (error) {
-      console.error('Erreur demande emprunt :', error);
-
-      if (message) {
-        message.textContent =
-          "Erreur : votre demande d'emprunt n'a pas été envoyée.";
-        message.classList.add('error');
-      }
-
+      message.textContent = "Impossible d'envoyer la demande.";
+      message.className = 'message error';
+      console.error(error);
       return;
     }
 
-    if (message) {
-      message.textContent =
-        "Demande envoyée. Un administrateur choisira la date de retour et acceptera ou refusera l'emprunt.";
-      message.classList.add('success');
-    }
+    message.textContent =
+      "Demande envoyée. L'administrateur choisira la date de retour.";
+    message.className = 'message success';
 
     bouton.remove();
-  });
+  };
 
-  zone.appendChild(bouton);
+  zoneEmprunt.append(bouton);
 }
