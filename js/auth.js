@@ -1,149 +1,168 @@
-// js/auth.js
 import { supabase } from './config.js';
 
-// --- Validations ---
+const ADMINS = [
+  'lucradison2@gmail.com',
+  'rcchancetick@gmail.com',
+  'rakoolivert@gmail.com'
+];
 
-export function validerMotDePasse(mdp) {
-  const aLettre = /[A-Za-z]/.test(mdp);
-  const aChiffre = /[0-9]/.test(mdp);
-  return aLettre && aChiffre && mdp.length >= 8;
+function estAdminEmail(email) {
+  return ADMINS.includes((email || '').trim().toLowerCase());
+}
+
+export function validerMotDePasse(password) {
+  return (
+    password.length >= 8 &&
+    /[A-Za-z]/.test(password) &&
+    /[0-9]/.test(password)
+  );
 }
 
 export function validerCarteIdentite(valeur) {
-  if (!valeur || valeur.trim() === '') {
-    return true; // facultatif
-  }
-  const chiffres = valeur.replace(/D/g, '');
-  return chiffres.length >= 12;
+  if (!valeur || valeur.trim() === '') return true;
+
+  return valeur.replace(/D/g, '').length >= 12;
 }
 
 export function validerCarteEtudiant(valeur) {
-  if (!valeur || valeur.trim() === '') {
-    return true; // facultatif
-  }
-  return /^[A-Za-z0-9]+$/.test(valeur);
+  if (!valeur || valeur.trim() === '') return true;
+
+  return /^[A-Za-z0-9_-]+$/.test(valeur);
 }
 
-// --- Inscription ---
-
 export async function inscrireUtilisateur({
-  email,
-  password,
   first_name,
   last_name,
+  email,
+  password,
   carte_identite,
   carte_etudiant
 }) {
+  const emailNettoye = email.trim().toLowerCase();
+
   if (!validerMotDePasse(password)) {
     throw new Error(
-      "Le mot de passe doit contenir au moins 8 caractères, dont 1 lettre et 1 chiffre."
+      'Le mot de passe doit contenir au moins 8 caractères, une lettre et un chiffre.'
     );
   }
 
   if (!validerCarteIdentite(carte_identite)) {
     throw new Error(
-      "Le numéro de carte d'identité doit contenir au moins 12 chiffres."
+      "La carte d'identité doit contenir au moins 12 chiffres si elle est renseignée."
     );
   }
 
   if (!validerCarteEtudiant(carte_etudiant)) {
     throw new Error(
-      "La carte étudiant ne peut contenir que des lettres et des chiffres."
+      'La carte étudiant accepte seulement lettres, chiffres, tirets et _.'
     );
   }
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
-    email,
-    password
+    email: emailNettoye,
+    password,
+    options: {
+      emailRedirectTo: `${window.location.origin}${window.location.pathname.replace(
+        'inscription.html',
+        'connexion.html'
+      )}`
+    }
   });
 
-  if (authError) {
-    throw authError;
-  }
+  if (authError) throw authError;
+  if (!authData.user) throw new Error('Impossible de créer le compte.');
 
-  const user = authData.user;
-  if (!user) {
-    throw new Error("L'inscription a échoué (pas de user).");
-  }
+  const admin = estAdminEmail(emailNettoye);
 
-  const { error: profileError } = await supabase.from('profiles').insert({
-    id: user.id,
-    email,
-    first_name,
-    last_name,
-    carte_identite: carte_identite || null,
-    carte_etudiant: carte_etudiant || null,
-    role: 'user',
-    status: 'pending'
-  });
+  const { error: profilError } = await supabase.from('profiles').upsert(
+    {
+      id: authData.user.id,
+      email: emailNettoye,
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      carte_identite: carte_identite.trim() || null,
+      carte_etudiant: carte_etudiant.trim() || null,
+      role: admin ? 'admin' : 'user',
+      status: admin ? 'active' : 'pending'
+    },
+    { onConflict: 'id' }
+  );
 
-  if (profileError) {
-    await supabase.auth.admin.deleteUser(user.id);
-    throw profileError;
-  }
+  if (profilError) throw profilError;
 
   return authData;
 }
 
-// --- Connexion ---
-
 export async function connecterUtilisateur({ email, password }) {
   const { data, error } = await supabase.auth.signInWithPassword({
-    email,
+    email: email.trim().toLowerCase(),
     password
   });
 
   if (error) {
-    throw error;
+    if (error.message.toLowerCase().includes('email not confirmed')) {
+      throw new Error(
+        'Votre e-mail n’est pas confirmé. Vérifiez votre boîte e-mail et cliquez sur le lien reçu.'
+      );
+    }
+
+    throw new Error('Adresse e-mail ou mot de passe incorrect.');
   }
 
-  const user = data.user;
-  if (!user) {
-    throw new Error("La connexion a échoué (pas de user).");
-  }
+  if (!data.user) throw new Error('Connexion impossible.');
 
-  // Si "Confirm email" est activé dans Supabase, on vérifie :
-  if (!user.email_confirmed_at) {
+  if (!data.user.email_confirmed_at) {
     await supabase.auth.signOut();
-    throw new Error("Veuillez confirmer votre adresse e-mail.");
+
+    throw new Error(
+      "Vous devez confirmer votre adresse e-mail avant de vous connecter."
+    );
   }
 
-  const { data: profil } = await supabase
+  const { data: profil, error: profilError } = await supabase
     .from('profiles')
-    .select('role, status')
-    .eq('id', user.id)
+    .select('*')
+    .eq('id', data.user.id)
     .single();
 
-  if (!profil) {
+  if (profilError || !profil) {
     await supabase.auth.signOut();
-    throw new Error("Profil introuvable. Contactez l'administrateur.");
+    throw new Error('Profil utilisateur introuvable.');
   }
 
-  if (profil.status !== 'active') {
+  if (profil.status === 'pending') {
     await supabase.auth.signOut();
-    throw new Error("Votre compte n'est pas encore activé par l'administrateur.");
+
+    throw new Error(
+      "Votre e-mail est confirmé, mais votre compte attend la validation d'un administrateur."
+    );
   }
 
-  return data;
+  if (profil.status === 'rejected') {
+    await supabase.auth.signOut();
+    throw new Error('Votre compte a été refusé par un administrateur.');
+  }
+
+  return { user: data.user, profil };
 }
 
-// --- Utilisateur courant ---
-
 export async function getUtilisateurCourant() {
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
   if (!user) return null;
 
   const { data: profil } = await supabase
     .from('profiles')
-    .select('role, status, first_name, last_name, email')
+    .select('*')
     .eq('id', user.id)
     .single();
 
   return { user, profil };
 }
 
-// --- Déconnexion ---
-
 export async function deconnecterUtilisateur() {
-  await supabase.auth.signOut();
+  const { error } = await supabase.auth.signOut();
+  if (error) throw error;
 }
