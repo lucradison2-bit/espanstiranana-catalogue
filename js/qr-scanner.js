@@ -1,89 +1,58 @@
-// js/scanner.js
-let scannerActif = null;
+let scanner = null;
 
-export async function ouvrirScannerQr({
-  lecteurId,
-  onSuccess,
-  onError
-}) {
-  if (scannerActif) {
-    await fermerScannerQr();
-  }
-
-  if (typeof Html5Qrcode === 'undefined') {
-    const erreur = new Error(
-      "Le scanner n'est pas chargé. Vérifiez la connexion Internet."
-    );
-
-    if (onError) onError(erreur);
-    return;
-  }
-
-  const lecteur = document.getElementById(lecteurId);
-
-  if (!lecteur) {
-    const erreur = new Error('Zone du scanner introuvable.');
-
-    if (onError) onError(erreur);
-    return;
-  }
-
-  scannerActif = new Html5Qrcode(lecteurId);
-
+export async function ouvrirScanner({ lecteurId, onSuccess, onError }) {
   try {
+    if (typeof Html5Qrcode === 'undefined') {
+      throw new Error('Le scanner QR ne peut pas être chargé.');
+    }
+
+    if (scanner) {
+      await fermerScanner();
+    }
+
+    scanner = new Html5Qrcode(lecteurId);
+
     const cameras = await Html5Qrcode.getCameras();
 
-    if (!cameras || cameras.length === 0) {
-      throw new Error('Aucune caméra détectée sur cet appareil.');
+    if (!cameras?.length) {
+      throw new Error('Aucune caméra détectée.');
     }
 
-    const cameraArriere =
-      cameras.find((camera) =>
-        /back|rear|environment/i.test(camera.label)
+    const camera =
+      cameras.find((element) =>
+        /back|rear|environment/i.test(element.label)
       ) || cameras[0];
 
-    await scannerActif.start(
-      cameraArriere.id,
+    await scanner.start(
+      camera.id,
       {
         fps: 10,
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1
-      },
-      async (texteScanne) => {
-        await fermerScannerQr();
-
-        if (onSuccess) {
-          onSuccess(texteScanne);
+        qrbox: {
+          width: 250,
+          height: 250
         }
       },
-      () => {
-        // Lecture continue : aucune erreur à afficher ici.
-      }
+      async (valeur) => {
+        await fermerScanner();
+        onSuccess?.(valeur);
+      },
+      () => {}
     );
   } catch (error) {
-    console.error('Erreur caméra/scan :', error);
-    await fermerScannerQr();
-
-    if (onError) {
-      onError(error);
-    }
+    await fermerScanner();
+    onError?.(error);
   }
 }
 
-export async function fermerScannerQr() {
-  if (!scannerActif) return;
+export async function fermerScanner() {
+  if (!scanner) return;
 
   try {
-    const etat = scannerActif.getState();
-
-    if (etat === Html5QrcodeScannerState.SCANNING) {
-      await scannerActif.stop();
-    }
-
-    await scannerActif.clear();
+    await scanner.stop();
+    await scanner.clear();
   } catch (error) {
-    console.warn('Fermeture scanner :', error);
+    console.warn(error);
   } finally {
-    scannerActif = null;
+    scanner = null;
   }
 }
