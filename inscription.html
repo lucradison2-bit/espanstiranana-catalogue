@@ -1,75 +1,111 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Inscription</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="stylesheet" href="css/style.css" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscription | ESP Antsiranana</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
-  <nav>
-    <a href="index.html">Accueil</a>
-    <a href="catalogue.html">Catalogue</a>
-    <a href="connexion.html" id="btn-connexion">Connexion</a>
-    <a href="#" id="btn-deconnexion" style="display:none;">Déconnexion</a>
-    <a href="administration.html" id="lien-admin" style="display:none;">Administration</a>
-    <span id="span-nom-utilisateur"></span>
-  </nav>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
-  <h1>Inscription</h1>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
+      </nav>
 
-  <form id="form-inscription">
-    <label>
-      Prénom
-      <input type="text" id="first_name" required />
-    </label>
+      <div class="nav-actions">
+        <a href="connexion.html" class="btn btn-outline">Connexion</a>
+      </div>
+    </div>
+  </header>
 
-    <label>
-      Nom
-      <input type="text" id="last_name" required />
-    </label>
+  <main class="container narrow">
+    <section class="auth-card">
+      <p class="eyebrow blue">Nouveau membre</p>
+      <h1>Créer un compte</h1>
+      <p>
+        Après l’inscription, confirmez votre e-mail. Votre compte sera ensuite
+        validé par un administrateur.
+      </p>
 
-    <label>
-      E-mail
-      <input type="email" id="email" required />
-    </label>
+      <form id="form-inscription">
+        <div class="form-grid">
+          <label>
+            Prénom *
+            <input id="first_name" type="text" required>
+          </label>
 
-    <label>
-      Mot de passe (≥8 caractères, 1 lettre + 1 chiffre)
-      <input type="password" id="password" required />
-    </label>
+          <label>
+            Nom *
+            <input id="last_name" type="text" required>
+          </label>
+        </div>
 
-    <label>
-      Numéro de carte d'identité (facultatif, ≥12 chiffres)
-      <input type="text" id="carte_identite" />
-    </label>
+        <label>
+          Adresse e-mail *
+          <input id="email" type="email" required autocomplete="email">
+        </label>
 
-    <label>
-      Numéro de carte étudiant (facultatif, lettres/chiffres ou QR)
-      <input type="text" id="carte_etudiant" />
-      <button type="button" id="btn-scan-carte">Scanner QR carte étudiant</button>
-    </label>
+        <label>
+          Mot de passe *
+          <input
+            id="password"
+            type="password"
+            required
+            autocomplete="new-password"
+            placeholder="8 caractères minimum, lettre + chiffre"
+          >
+        </label>
 
-    <button type="submit">S'inscrire</button>
-    <div id="message" class="error"></div>
-  </form>
+        <label>
+          Numéro de carte d’identité
+          <input
+            id="carte_identite"
+            type="text"
+            placeholder="Facultatif — minimum 12 chiffres si renseigné"
+          >
+        </label>
 
-  <p>
-    Déjà un compte ? <a href="connexion.html">Se connecter</a>
-  </p>
+        <label>
+          Numéro de carte étudiant
+          <input
+            id="carte_etudiant"
+            type="text"
+            placeholder="Facultatif — numéro ou code QR"
+          >
+        </label>
+
+        <button type="submit">Créer mon compte</button>
+        <p id="message" class="message"></p>
+      </form>
+
+      <p class="auth-bottom">
+        Vous avez déjà un compte ?
+        <a href="connexion.html">Se connecter</a>
+      </p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque
+  </footer>
 
   <script type="module">
-    import { initMenu } from './js/commun.js';
     import { inscrireUtilisateur } from './js/auth.js';
-
-    initMenu();
 
     const form = document.getElementById('form-inscription');
     const message = document.getElementById('message');
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
       message.textContent = '';
+      message.className = 'message';
 
       const first_name = document.getElementById('first_name').value.trim();
       const last_name = document.getElementById('last_name').value.trim();
@@ -80,60 +116,24 @@
 
       try {
         await inscrireUtilisateur({
-          email,
-          password,
           first_name,
           last_name,
+          email,
+          password,
           carte_identite,
           carte_etudiant
         });
 
-        alert("Inscription réussie. Vérifiez vos e-mails si nécessaire.");
-        window.location.href = 'connexion.html';
-      } catch (err) {
-        message.textContent = err.message || "Erreur lors de l'inscription.";
+        message.textContent =
+          "Compte créé. Consultez votre e-mail, cliquez sur le lien de confirmation, puis attendez la validation d'un administrateur.";
+        message.className = 'message success';
+
+        form.reset();
+      } catch (error) {
+        message.textContent = error.message || "Erreur lors de l'inscription.";
+        message.className = 'message error';
       }
     });
-
-    // --- Scan QR carte étudiant ---
-    const btnScanCarte = document.getElementById('btn-scan-carte');
-    if (btnScanCarte && 'mediaDevices' in navigator) {
-      btnScanCarte.addEventListener('click', async () => {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: 'environment' }
-          });
-
-          const video = document.createElement('video');
-          video.srcObject = stream;
-          video.setAttribute('playsinline', true);
-          video.style.position = 'fixed';
-          video.style.top = '0';
-          video.style.left = '0';
-          video.style.width = '100%';
-          video.style.height = '100%';
-          video.style.background = '#000';
-          video.style.zIndex = '9999';
-          document.body.appendChild(video);
-
-          await video.play();
-
-          setTimeout(() => {
-            alert(
-              "Pointez la caméra sur le QR code de la carte étudiant.
-" +
-              "Ensuite, saisissez manuellement le code affiché dans le champ 'Numéro de carte étudiant'."
-            );
-            stream.getTracks().forEach(track => track.stop());
-            video.remove();
-          }, 5000);
-        } catch (err) {
-          alert("Impossible d'accéder à la caméra : " + err.message);
-        }
-      });
-    } else if (btnScanCarte) {
-      btnScanCarte.style.display = 'none';
-    }
   </script>
 </body>
 </html>
