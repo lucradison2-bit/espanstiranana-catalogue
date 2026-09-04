@@ -1,86 +1,68 @@
-import { supabase } from './supabase.js'
-import {
-  escapeHtml,
-  formatDate,
-  formatMoney,
-  getCurrentUser,
-  loanStatusLabel,
-  renderLayout,
-} from './commun.js'
+// js/espace.js
+import { getUtilisateurCourant } from './auth.js';
+import { supabase } from './config.js';
 
-await renderLayout()
-
-const user = await getCurrentUser()
-
-if (!user) {
-  window.location.href = './connexion.html'
-} else {
-  const profileElement = document.querySelector('#profil')
-  const loansElement = document.querySelector('#mes-emprunts')
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  const { data: loans } = await supabase
-    .from('loans')
-    .select(`
-      *,
-      books(title, author, reference),
-      penalties(late_days, amount, paid_amount, status)
-    `)
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-
-  profileElement.innerHTML = `
-    <div class="profile-card">
-      <h2>
-        ${escapeHtml(profile?.first_name || '')}
-        ${escapeHtml(profile?.last_name || '')}
-      </h2>
-
-      <p>${escapeHtml(profile?.email || '')}</p>
-
-      <p>
-        Statut du compte :
-        <strong>${profile?.status === 'active' ? 'Validé' : 'En attente'}</strong>
-      </p>
-    </div>
-  `
-
-  loansElement.innerHTML = (loans || []).map((loan) => {
-    const penalty = Array.isArray(loan.penalties)
-      ? loan.penalties[0]
-      : loan.penalties
-
-    return `
-      <article class="loan-card">
-        <h3>${escapeHtml(loan.books?.title || 'Livre')}</h3>
-        <p class="muted">${escapeHtml(loan.books?.author || '')}</p>
-
-        <p>
-          Statut :
-          <span class="loan-status status-${loan.status}">
-            ${loanStatusLabel(loan.status)}
-          </span>
-        </p>
-
-        <p>Date d’emprunt : ${formatDate(loan.borrowed_at)}</p>
-        <p>Date limite : ${formatDate(loan.due_at)}</p>
-        <p>Date de retour : ${formatDate(loan.returned_at)}</p>
-
-        ${
-          penalty
-            ? `<p>Pénalité : ${formatMoney(penalty.amount)}</p>`
-            : ''
-        }
-      </article>
-    `
-  }).join('')
-
-  if (!loans?.length) {
-    loansElement.innerHTML = '<p class="muted">Aucun emprunt.</p>'
+export async function afficherEspace() {
+  const info = await getUtilisateurCourant();
+  if (!info) {
+    window.location.href = 'connexion.html';
+    return;
   }
-    }
+
+  const { user, profil } = info;
+
+  const elNom = document.getElementById('profil-nom');
+  const elEmail = document.getElementById('profil-email');
+  const elCarteIdentite = document.getElementById('profil-carte-identite');
+  const elCarteEtudiant = document.getElementById('profil-carte-etudiant');
+
+  if (elNom) {
+    elNom.textContent = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+  }
+  if (elEmail) elEmail.textContent = profil.email || '';
+  if (elCarteIdentite) elCarteIdentite.textContent = profil.carte_identite || 'Non renseignée';
+  if (elCarteEtudiant) elCarteEtudiant.textContent = profil.carte_etudiant || 'Non renseignée';
+
+  await chargerHistorique(user.id);
+}
+
+async function chargerHistorique(userId) {
+  const { data: emprunts, error } = await supabase
+    .from('emprunts')
+    .select(`
+      id,
+      statut,
+      date_emprunt,
+      date_retour_prevu,
+      date_retour_reel,
+      livres ( titre, auteur )
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error(error);
+    return;
+  }
+
+  const tbody = document.querySelector('#table-historique tbody');
+  if (!tbody) return;
+
+  tbody.innerHTML = '';
+
+  for (const e of emprunts) {
+    const tr = document.createElement('tr');
+    const livre = e.livres;
+
+    tr.innerHTML = `
+      <td>${livre?.titre || '???'}</td>
+      <td>${livre?.auteur || ''}</td>
+      <td>${e.statut}</td>
+      <td>${e.date_emprunt ? new Date(e.date_emprunt).toLocaleDateString() : ''}</td>
+      <td>${e.date_retour_prevu ? new Date(e.date_retour_prevu).toLocaleDateString() : ''}</td>
+      <td>${e.date_retour_reel ? new Date(e.date_retour_reel).toLocaleDateString() : ''}</td>
+    `;
+
+    tbody.appendChild(tr);
+  }
+}
