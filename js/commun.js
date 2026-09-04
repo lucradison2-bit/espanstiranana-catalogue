@@ -1,68 +1,81 @@
 // js/commun.js
 import { getUtilisateurCourant, deconnecterUtilisateur } from './auth.js';
 
+function montrer(element) {
+  if (!element) return;
+  element.classList.remove('hidden');
+}
+
+function cacher(element) {
+  if (!element) return;
+  element.classList.add('hidden');
+}
+
 export async function initMenu() {
   const btnConnexion = document.getElementById('btn-connexion');
   const btnDeconnexion = document.getElementById('btn-deconnexion');
   const lienAdmin = document.getElementById('lien-admin');
+  const lienEspace = document.getElementById('lien-espace');
   const spanNom = document.getElementById('span-nom-utilisateur');
+
+  // Toujours cacher Administration au début.
+  cacher(lienAdmin);
+  cacher(lienEspace);
+  cacher(btnDeconnexion);
+  montrer(btnConnexion);
 
   const info = await getUtilisateurCourant();
 
-  if (!info) {
-    if (btnConnexion) btnConnexion.style.display = 'inline-block';
-    if (btnDeconnexion) btnDeconnexion.style.display = 'none';
-    if (lienAdmin) lienAdmin.style.display = 'none';
+  // Personne non connectée : administration reste cachée.
+  if (!info || !info.user || !info.profil) {
     if (spanNom) spanNom.textContent = '';
     return;
   }
 
-  const { user, profil } = info;
+  const { profil } = info;
 
-  if (btnConnexion) btnConnexion.style.display = 'none';
-  if (btnDeconnexion) btnDeconnexion.style.display = 'inline-block';
+  // Utilisateur connecté.
+  cacher(btnConnexion);
+  montrer(btnDeconnexion);
+  montrer(lienEspace);
 
-  if (spanNom && profil) {
-    spanNom.textContent = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+  if (spanNom) {
+    const nom = `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+    spanNom.textContent = nom || profil.email || '';
   }
 
-  // Lien admin visible uniquement pour les admins actifs
-  if (
-    profil &&
-    profil.role === 'admin' &&
-    profil.status === 'active'
-  ) {
-    if (lienAdmin) lienAdmin.style.display = 'inline-block';
+  // Le lien est montré seulement si l'utilisateur est admin ET actif.
+  if (profil.role === 'admin' && profil.status === 'active') {
+    montrer(lienAdmin);
+    lienAdmin.setAttribute('aria-hidden', 'false');
   } else {
-    if (lienAdmin) lienAdmin.style.display = 'none';
+    cacher(lienAdmin);
+    lienAdmin.setAttribute('aria-hidden', 'true');
   }
 
   if (btnDeconnexion) {
-    btnDeconnexion.addEventListener('click', async (e) => {
-      e.preventDefault();
+    btnDeconnexion.onclick = async () => {
       await deconnecterUtilisateur();
-      window.location.reload();
-    });
+      window.location.href = 'index.html';
+    };
   }
 }
 
 export async function verifierAdmin() {
   const info = await getUtilisateurCourant();
-  if (!info) {
-    window.location.href = 'connexion.html';
+
+  if (!info || !info.user || !info.profil) {
+    window.location.replace('connexion.html');
     return false;
   }
 
   const { profil } = info;
-  if (
-    !profil ||
-    profil.role !== 'admin' ||
-    profil.status !== 'active'
-  ) {
-    alert("Accès réservé à l'administrateur.");
-    window.location.href = 'index.html';
+
+  if (profil.role !== 'admin' || profil.status !== 'active') {
+    alert("Accès réservé aux administrateurs.");
+    window.location.replace('index.html');
     return false;
   }
 
   return true;
-    }
+}
