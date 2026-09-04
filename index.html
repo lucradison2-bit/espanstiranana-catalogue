@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ESP Antsiranana | Bibliothèque EIT 2</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -16,24 +16,14 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
-
-        <a href="espace.html" id="lien-espace" class="hidden">
-          Mon espace
-        </a>
-
-        <a href="administration.html" id="lien-admin" class="hidden">
-          Administration
-        </a>
+        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
+        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
 
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
-
-        <a id="btn-connexion" href="connexion.html" class="btn btn-outline">
-          Connexion
-        </a>
-
-        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <button id="btn-deconnexion" class="btn btn-danger hidden" type="button">
           Déconnexion
         </button>
       </div>
@@ -45,13 +35,13 @@
       <p class="eyebrow">ESP EIT 2</p>
       <h1>Bibliothèque ESP Antsiranana</h1>
       <p>
-        Consultez les livres, scannez le QR code d’un livre physique
-        et envoyez une demande d’emprunt.
+        Consultez les livres, ouvrez leur fiche et scannez le QR code collé sur
+        un livre physique.
       </p>
 
-      <div class="hero-actions">
-        <a href="catalogue.html" class="btn btn-light">Voir le catalogue</a>
-        <a href="livre.html" class="btn btn-hero-outline">Scanner un livre</a>
+      <div class="button-row">
+        <a class="btn btn-light" href="catalogue.html">Voir le catalogue</a>
+        <a class="btn btn-hero" href="livre.html">Scanner un livre</a>
       </div>
     </section>
 
@@ -71,15 +61,13 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow blue">Catalogue</p>
-          <h2>Livres enregistrés</h2>
+          <h2>Derniers livres</h2>
         </div>
 
-        <a href="catalogue.html" class="text-link">Voir tout →</a>
+        <a class="text-link" href="catalogue.html">Voir tout →</a>
       </div>
 
-      <div id="liste-livres" class="books-list">
-        Chargement des livres...
-      </div>
+      <div id="liste-livres" class="books-list">Chargement…</div>
     </section>
   </main>
 
@@ -95,4 +83,4 @@
     await chargerAccueil();
   </script>
 </body>
-  </html>
+</html>
