@@ -6,14 +6,14 @@
   <title>Administration | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css" />
 
-  <!-- Bibliothèque utilisée pour générer les QR codes -->
+  <!-- Bibliothèque pour créer les QR codes des livres physiques -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
   <header class="site-header">
     <div class="nav-container">
-      <a class="site-title" href="index.html">Bibliothèque ESP Antsiranana</a>
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
 
       <nav class="nav-menu">
         <a href="index.html">Accueil</a>
@@ -23,12 +23,15 @@
           Mon espace
         </a>
 
+        <!-- Toujours caché avant la vérification JavaScript -->
         <a href="administration.html" id="lien-admin" class="hidden">
           Administration
         </a>
       </nav>
 
       <div class="nav-buttons">
+        <span id="nom-utilisateur" class="nom-utilisateur hidden"></span>
+
         <a href="connexion.html" id="btn-connexion" class="btn-login">
           Connexion
         </a>
@@ -40,37 +43,64 @@
     </div>
   </header>
 
+  <!-- Toute la page reste cachée si la personne n'est pas admin -->
   <main id="contenu-admin" class="hidden page-content">
     <section class="admin-hero">
-      <p class="eyebrow">Accès réservé</p>
+      <p class="eyebrow">Espace privé</p>
       <h1>Administration de la bibliothèque</h1>
       <p>
-        Validez les comptes, gérez les emprunts, les retours, les pénalités
-        et les QR codes des livres physiques.
+        Gérez les comptes utilisateurs, les demandes d’emprunt, les dates de
+        retour, les pénalités et les livres physiques.
       </p>
     </section>
 
+    <!-- Validation des comptes -->
     <section class="admin-card">
-      <h2>Comptes en attente</h2>
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Utilisateurs</p>
+          <h2>Comptes en attente de validation</h2>
+        </div>
+      </div>
+
+      <p class="admin-description">
+        L’utilisateur doit confirmer son adresse e-mail, puis un administrateur
+        accepte ou refuse son compte.
+      </p>
 
       <div class="table-wrapper">
         <table id="table-comptes">
           <thead>
             <tr>
               <th>Nom</th>
-              <th>E-mail</th>
-              <th>Carte identité</th>
+              <th>Adresse e-mail</th>
+              <th>Carte d’identité</th>
               <th>Carte étudiant</th>
-              <th>Décision</th>
+              <th>Actions</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td colspan="5">Chargement...</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </section>
 
+    <!-- Gestion des emprunts -->
     <section class="admin-card">
-      <h2>Demandes et retours de livres</h2>
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Emprunts</p>
+          <h2>Demandes, retours et pénalités</h2>
+        </div>
+      </div>
+
+      <p class="admin-description">
+        Pour accepter un emprunt, choisissez la date de retour. Cette date peut
+        être modifiée tant que le livre n’est pas retourné.
+      </p>
 
       <div class="table-wrapper">
         <table id="table-demandes">
@@ -78,31 +108,55 @@
             <tr>
               <th>Utilisateur</th>
               <th>Livre</th>
-              <th>Demande</th>
+              <th>Date demande</th>
               <th>Statut</th>
               <th>Retour prévu</th>
               <th>Pénalité</th>
-              <th>Actions</th>
+              <th>Actions admin</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td colspan="7">Chargement...</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </section>
 
+    <!-- Ajout de livre -->
     <section class="admin-card">
-      <h2>Ajouter un livre physique</h2>
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Catalogue</p>
+          <h2>Ajouter un livre physique</h2>
+        </div>
+      </div>
+
+      <p class="admin-description">
+        La référence doit être unique. Elle peut aussi être imprimée sous forme
+        de QR code à coller sur le livre physique.
+      </p>
 
       <form id="form-ajout-livre" class="form-livre">
         <div class="form-grid">
           <label>
             Titre du livre *
-            <input type="text" id="livre-titre" required />
+            <input
+              type="text"
+              id="livre-titre"
+              required
+              placeholder="Exemple : Algèbre générale"
+            />
           </label>
 
           <label>
             Auteur
-            <input type="text" id="livre-auteur" />
+            <input
+              type="text"
+              id="livre-auteur"
+              placeholder="Exemple : Jean Dupont"
+            />
           </label>
 
           <label>
@@ -117,24 +171,40 @@
 
           <label>
             Catégorie
-            <input type="text" id="livre-categorie" placeholder="Mathématiques, Informatique..." />
+            <input
+              type="text"
+              id="livre-categorie"
+              placeholder="Exemple : Mathématiques"
+            />
           </label>
         </div>
 
         <label>
           Résumé
-          <textarea id="livre-resume" rows="4"></textarea>
+          <textarea
+            id="livre-resume"
+            rows="4"
+            placeholder="Résumé ou description du livre"
+          ></textarea>
         </label>
 
-        <button type="submit">Ajouter le livre et créer son QR code</button>
+        <button type="submit">Ajouter le livre</button>
+        <p id="message-livre" class="message"></p>
       </form>
     </section>
 
+    <!-- Liste de livres -->
     <section class="admin-card">
-      <h2>Livres et QR codes imprimables</h2>
+      <div class="section-title-row">
+        <div>
+          <p class="eyebrow">Livres physiques</p>
+          <h2>Livres enregistrés et QR codes</h2>
+        </div>
+      </div>
+
       <p class="admin-description">
-        Clique sur « Afficher QR » pour générer le QR code du livre. Ensuite,
-        télécharge-le ou imprime-le et colle-le sur le livre physique.
+        Cliquez sur « QR code » pour télécharger ou imprimer un QR code unique
+        à coller sur le livre physique.
       </p>
 
       <div class="table-wrapper">
@@ -150,35 +220,48 @@
               <th>Action</th>
             </tr>
           </thead>
-          <tbody></tbody>
+          <tbody>
+            <tr>
+              <td colspan="7">Chargement...</td>
+            </tr>
+          </tbody>
         </table>
       </div>
     </section>
   </main>
 
-  <!-- Fenêtre QR code -->
+  <!-- Fenêtre affichant le QR code -->
   <div id="modal-qr" class="modal hidden" role="dialog" aria-modal="true">
     <div class="modal-content">
-      <button id="btn-fermer-qr" class="modal-close" type="button" aria-label="Fermer">
+      <button
+        id="btn-fermer-qr"
+        type="button"
+        class="modal-close"
+        aria-label="Fermer la fenêtre"
+      >
         ×
       </button>
 
+      <p class="eyebrow">Livre physique</p>
       <h2 id="qr-titre">QR code du livre</h2>
-      <p id="qr-reference"></p>
+      <p id="qr-reference" class="small-info"></p>
 
       <div id="qrcode-container" class="qrcode-container"></div>
 
       <p class="qr-help">
-        Imprime ce QR code et colle-le sur le livre physique.
+        Imprimez ce QR code puis collez-le sur le livre physique. Le scan ouvre
+        automatiquement les informations du livre.
       </p>
 
-      <button id="btn-telecharger-qr" type="button">
-        Télécharger le QR code
-      </button>
+      <div class="modal-actions">
+        <button id="btn-telecharger-qr" type="button">
+          Télécharger
+        </button>
 
-      <button id="btn-imprimer-qr" type="button" class="btn-return">
-        Imprimer le QR code
-      </button>
+        <button id="btn-imprimer-qr" type="button" class="btn-return">
+          Imprimer
+        </button>
+      </div>
     </div>
   </div>
 
@@ -190,4 +273,4 @@
     await initAdministration();
   </script>
 </body>
-  </html>
+              </html>
