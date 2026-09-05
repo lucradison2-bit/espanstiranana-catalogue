@@ -1,7 +1,7 @@
 :root {
-  --sky: #4b5563;
-  --blue: #374151;
-  --blue2: #1f2937;
+  --sky: #374151;
+  --blue: #1f2937;
+  --blue2: #111827;
   --light: #e5e7eb;
   --pale: #f9fafb;
   --white: #ffffff;
@@ -51,7 +51,7 @@ textarea {
   top: 0;
   z-index: 100;
   background: linear-gradient(90deg, var(--sky), var(--blue));
-  box-shadow: 0 3px 14px rgba(31, 41, 55, 0.22);
+  box-shadow: 0 3px 14px rgba(17, 24, 39, 0.22);
 }
 
 .nav-container {
@@ -134,7 +134,7 @@ button {
 .btn:hover,
 button:hover {
   background: var(--blue2);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.25);
+  box-shadow: 0 4px 12px rgba(17, 24, 39, 0.25);
   transform: translateY(-1px);
 }
 
@@ -339,7 +339,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(190px, 1fr));
   gap: 18px;
- margin-top: 22px;
+  margin-top: 22px;
 }
 
 .stat-card {
@@ -444,7 +444,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 8px;
   outline: none;
- background: #ffffff;
+  background: #ffffff;
   color: var(--text);
 }
 
@@ -555,7 +555,7 @@ td button {
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 850;
- text-transform: capitalize;
+  text-transform: capitalize;
 }
 
 .badge-pending {
@@ -610,7 +610,7 @@ td button {
   padding: 18px;
   align-items: center;
   justify-content: center;
-  background: rgba(4, 30, 46, 0.72);
+  background: rgba(17, 24, 39, 0.72);
 }
 
 .modal-content {
@@ -660,7 +660,7 @@ td button {
   .nav-container {
     width: calc(100% - 24px);
     padding: 13px 0;
-   align-items: flex-start;
+    align-items: flex-start;
     flex-direction: column;
     gap: 12px;
   }
@@ -697,4 +697,4 @@ td button {
   .user-name {
     max-width: 130px;
   }
-}
+  }
