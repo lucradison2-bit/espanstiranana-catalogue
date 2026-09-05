@@ -23,10 +23,12 @@ async function inscrireUtilisateur(event) {
   const confirmationMotDePasse = document.querySelector(
     '#confirmation-mot-de-passe'
   ).value;
+
   const carteEtudiant = document
     .querySelector('#carte-etudiant')
     .value
     .trim();
+
   const carteIdentite = document
     .querySelector('#carte-identite')
     .value
@@ -38,7 +40,7 @@ async function inscrireUtilisateur(event) {
   if (!prenom) {
     afficherErreur(
       message,
-      'Veuillez saisir votre prénom. Si vous n’en avez pas, mettez un point : .'
+      'Veuillez saisir votre prénom. Si vous n’en avez pas, écrivez un point : .'
     );
     return;
   }
@@ -62,14 +64,9 @@ async function inscrireUtilisateur(event) {
   }
 
   if (motDePasse !== confirmationMotDePasse) {
-    afficherErreur(message, 'Les deux mots de passe ne sont pas identiques.');
-    return;
-  }
-
-  if (!carteEtudiant) {
     afficherErreur(
       message,
-      'Veuillez saisir votre numéro de carte étudiant.'
+      'Les deux mots de passe ne sont pas identiques.'
     );
     return;
   }
@@ -78,14 +75,6 @@ async function inscrireUtilisateur(event) {
   bouton.textContent = 'Inscription en cours…';
 
   try {
-    /*
-      Étape 1 :
-      Création du compte dans Supabase Auth.
-
-      Les informations supplémentaires sont placées dans data.
-      Elles peuvent ensuite être utilisées par un trigger Supabase
-      pour créer le profil automatiquement.
-    */
     const { data: resultatInscription, error: erreurInscription } =
       await supabase.auth.signUp({
         email,
@@ -94,7 +83,7 @@ async function inscrireUtilisateur(event) {
           data: {
             first_name: prenom,
             last_name: nom,
-            carte_etudiant: carteEtudiant,
+            carte_etudiant: carteEtudiant || null,
             carte_identite: carteIdentite || null,
             role: 'user',
             status: 'pending'
@@ -114,13 +103,6 @@ async function inscrireUtilisateur(event) {
       );
     }
 
-    /*
-      Étape 2 :
-      Création ou mise à jour du profil dans la table profiles.
-
-      upsert évite une erreur si un trigger Supabase crée déjà le profil.
-      id est l’identifiant de supabase.auth.users.
-    */
     const { error: erreurProfil } = await supabase
       .from('profiles')
       .upsert(
@@ -129,7 +111,7 @@ async function inscrireUtilisateur(event) {
           first_name: prenom,
           last_name: nom,
           email,
-          carte_etudiant: carteEtudiant,
+          carte_etudiant: carteEtudiant || null,
           carte_identite: carteIdentite || null,
           role: 'user',
           status: 'pending'
@@ -144,36 +126,31 @@ async function inscrireUtilisateur(event) {
     }
 
     message.textContent =
-      'Inscription réussie. Vérifiez votre boîte e-mail, puis attendez la validation de votre compte par l’administrateur.';
+      'Inscription réussie. Vérifiez votre e-mail, puis attendez la validation de votre compte par l’administrateur.';
     message.className = 'message success';
 
     event.target.reset();
   } catch (error) {
-    console.error('Erreur inscription :', error);
+    console.error('Erreur inscription complète :', error);
 
-    let texteErreur =
-      "L'inscription a échoué. Vérifiez vos informations puis réessayez.";
+    const messageSupabase =
+      error?.message ||
+      error?.details ||
+      'Une erreur inconnue est survenue.';
 
-    const erreurMinuscule = String(error.message || '').toLowerCase();
+    const erreurMinuscule = String(messageSupabase).toLowerCase();
+
+    let texteErreur = `Erreur : ${messageSupabase}`;
 
     if (erreurMinuscule.includes('already registered')) {
       texteErreur =
         'Cette adresse e-mail possède déjà un compte. Essayez de vous connecter.';
-    }
-
-    if (erreurMinuscule.includes('password')) {
+    } else if (erreurMinuscule.includes('password')) {
       texteErreur =
-        'Le mot de passe est refusé. Utilisez au moins 6 caractères.';
-    }
-
-    if (erreurMinuscule.includes('email')) {
+        'Mot de passe refusé. Utilisez au moins 6 caractères.';
+    } else if (erreurMinuscule.includes('row-level security')) {
       texteErreur =
-        'Cette adresse e-mail est invalide ou ne peut pas être utilisée.';
-    }
-
-    if (erreurMinuscule.includes('row-level security')) {
-      texteErreur =
-        'Erreur de droits Supabase : la création du profil est bloquée. L’administrateur doit vérifier les politiques RLS.';
+        'Erreur Supabase : la création du profil est bloquée par les droits RLS.';
     }
 
     afficherErreur(message, texteErreur);
@@ -186,4 +163,4 @@ async function inscrireUtilisateur(event) {
 function afficherErreur(element, texte) {
   element.textContent = texte;
   element.className = 'message error';
-    }
+}
