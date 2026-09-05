@@ -19,15 +19,23 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
-        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
-        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
+
+        <a id="lien-espace" class="hidden" href="espace.html">
+          Mon espace
+        </a>
+
+        <a id="lien-admin" class="hidden" href="administration.html">
+          Administration
+        </a>
       </nav>
 
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
+
         <a id="btn-connexion" class="btn btn-outline" href="connexion.html">
           Connexion
         </a>
+
         <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
           Déconnexion
         </button>
@@ -40,7 +48,8 @@
       <p class="eyebrow">Accès réservé</p>
       <h1>Administration</h1>
       <p>
-        Validation des comptes, emprunts, dates de retour, pénalités et livres.
+        Validation des comptes, gestion des membres, emprunts, dates de retour,
+        pénalités et livres.
       </p>
     </section>
 
@@ -72,8 +81,7 @@
       <h2>Tous les membres</h2>
 
       <p class="help-text">
-        Cette liste affiche les comptes utilisateurs. Le compte administrateur
-        ne peut pas être supprimé depuis cette page.
+        Le compte administrateur ne peut pas être supprimé depuis cette page.
       </p>
 
       <div class="table-wrapper">
@@ -101,9 +109,9 @@
       <h2>Emprunts</h2>
 
       <p class="help-text">
-        Vous choisissez la date de retour pour chaque demande d’emprunt.
-        Après acceptation, vous pouvez encore modifier cette date avant le
-        retour du livre.
+        Vous choisissez la date de retour de chaque livre avant d’accepter
+        l’emprunt. Vous pouvez aussi modifier cette date tant que le livre
+        n’est pas retourné.
       </p>
 
       <div class="table-wrapper">
@@ -165,7 +173,6 @@
         </label>
 
         <button type="submit">Ajouter le livre</button>
-
         <p id="message-livre" class="message"></p>
       </form>
     </section>
@@ -204,7 +211,6 @@
       </button>
 
       <h2 id="qr-titre">QR code</h2>
-
       <p id="qr-reference" class="help-text"></p>
 
       <div id="qrcode-container" class="qrcode-container"></div>
