@@ -22,16 +22,30 @@ const convertirDateISO = (date) =>
 export async function initAdministration() {
   //const estAdmin = await verifierAdmin();
 
-  document.querySelector('#contenu-admin').classList.remove('hidden');
+  console.log('initAdministration appelée');
 
+  // On affiche directement le contenu, sans verifierAdmin()
+  const contenu = document.querySelector('#contenu-admin');
+  if (contenu) {
+    contenu.classList.remove('hidden');
+    console.log('contenu-admin affiché');
+  } else {
+    console.warn('#contenu-admin introuvable');
+  }
+
+  // On attache les événements
   installerEvenements();
+  console.log('événements installés');
 
+  // On charge les données
+  console.log('chargement des données...');
   await Promise.all([
     chargerComptes(),
     chargerEmprunts(),
     chargerLivres(),
     chargerTousMembres()
   ]);
+  console.log('données chargées');
 }
 
 function installerEvenements() {
