@@ -26,7 +26,11 @@ export async function initAdministration() {
     return;
   }
 
-  document.querySelector('#contenu-admin').classList.remove('hidden');
+  const contenuAdmin = document.querySelector('#contenu-admin');
+
+  if (contenuAdmin) {
+    contenuAdmin.classList.remove('hidden');
+  }
 
   installerEvenements();
 
@@ -63,8 +67,10 @@ async function chargerComptes() {
 
   if (error) {
     console.error('Erreur comptes :', error);
+
     tbody.innerHTML =
       '<tr><td colspan="5">Erreur lors du chargement des comptes.</td></tr>';
+
     return;
   }
 
@@ -119,8 +125,10 @@ async function chargerTousMembres() {
 
   if (error) {
     console.error('Erreur membres :', error);
+
     tbody.innerHTML =
       '<tr><td colspan="5">Erreur lors du chargement des membres.</td></tr>';
+
     return;
   }
 
@@ -237,7 +245,7 @@ async function actionMembre(event) {
     console.error('Erreur suppression membre :', error);
 
     alert(
-      'Impossible de supprimer ce membre. Vérifions ensuite les politiques Supabase.'
+      'Impossible de supprimer ce membre. Nous vérifierons ensuite les politiques Supabase.'
     );
 
     return;
@@ -252,160 +260,174 @@ async function actionMembre(event) {
 async function chargerEmprunts() {
   const tbody = document.querySelector('#table-emprunts tbody');
 
-  const { data, error } = await supabase
-    .from('emprunts')
-    .select(`
-      id,
-      user_id,
-      livre_id,
-      statut,
-      date_emprunt,
-      date_retour_prevu,
-      date_retour_reel,
-      created_at,
-      utilisateur:profiles!emprunts_user_id_fkey (
-        first_name,
-        last_name,
-        email
-      ),
-      livre:livres!emprunts_livre_id_fkey (
-        titre
-      )
-    `)
-    .order('created_at', { ascending: false });
+  try {
+    const [
+      { data: emprunts, error: erreurEmprunts },
+      { data: profils, error: erreurProfils },
+      { data: livres, error: erreurLivres }
+    ] = await Promise.all([
+      supabase
+        .from('emprunts')
+        .select(`
+          id,
+          user_id,
+          livre_id,
+          statut,
+          date_emprunt,
+          date_retour_prevu,
+          date_retour_reel,
+          created_at
+        `)
+        .order('created_at', { ascending: false }),
 
-  if (error) {
-    console.error('Erreur emprunts :', error);
+      supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email'),
+
+      supabase
+        .from('livres')
+        .select('id, titre')
+    ]);
+
+    if (erreurEmprunts) {
+      throw erreurEmprunts;
+    }
+
+    if (erreurProfils) {
+      throw erreurProfils;
+    }
+
+    if (erreurLivres) {
+      throw erreurLivres;
+    }
+
+    const profilsParId = new Map(
+      profils.map((profil) => [profil.id, profil])
+    );
+
+    const livresParId = new Map(
+      livres.map((livre) => [livre.id, livre])
+    );
+
+    tbody.innerHTML = emprunts.length
+      ? ''
+      : '<tr><td colspan="6">Aucun emprunt.</td></tr>';
+
+    emprunts.forEach((emprunt) => {
+      const profil = profilsParId.get(emprunt.user_id);
+      const livre = livresParId.get(emprunt.livre_id);
+
+      const utilisateur =
+        `${profil?.first_name || ''} ${profil?.last_name || ''}`.trim() ||
+        profil?.email ||
+        'Utilisateur inconnu';
+
+      const titreLivre =
+        livre?.titre ||
+        'Livre inconnu';
+
+      const dateRetour = emprunt.date_retour_prevu
+        ? new Date(emprunt.date_retour_prevu).toISOString().slice(0, 10)
+        : dateDans14Jours();
+
+      let actions = '-';
+
+      if (emprunt.statut === 'pending') {
+        actions = `
+          <label class="table-label">
+            Date retour
+            <input
+              class="input-date"
+              data-id="${emprunt.id}"
+              type="date"
+              value="${dateRetour}"
+            >
+          </label>
+
+          <button
+            class="btn-accept"
+            data-action="accepter-emprunt"
+            data-id="${emprunt.id}"
+            data-livre="${emprunt.livre_id}"
+          >
+            Accepter
+          </button>
+
+          <button
+            class="btn-reject"
+            data-action="refuser-emprunt"
+            data-id="${emprunt.id}"
+          >
+            Refuser
+          </button>
+        `;
+      }
+
+      if (emprunt.statut === 'approved') {
+        actions = `
+          <label class="table-label">
+            Modifier date
+            <input
+              class="input-date"
+              data-id="${emprunt.id}"
+              type="date"
+              value="${dateRetour}"
+            >
+          </label>
+
+          <button
+            class="btn-return"
+            data-action="sauver-date"
+            data-id="${emprunt.id}"
+          >
+            Enregistrer
+          </button>
+
+          <button
+            class="btn-return"
+            data-action="retour-livre"
+            data-id="${emprunt.id}"
+            data-livre="${emprunt.livre_id}"
+          >
+            Livre retourné
+          </button>
+        `;
+      }
+
+      if (emprunt.statut === 'returned') {
+        actions = '<span class="help-text">Livre retourné</span>';
+      }
+
+      if (emprunt.statut === 'rejected') {
+        actions = '<span class="help-text">Demande refusée</span>';
+      }
+
+      tbody.insertAdjacentHTML(
+        'beforeend',
+        `
+        <tr>
+          <td>${echapper(utilisateur)}</td>
+          <td>${echapper(titreLivre)}</td>
+
+          <td>
+            <span class="badge badge-${echapper(emprunt.statut || '')}">
+              ${echapper(emprunt.statut || '-')}
+            </span>
+          </td>
+
+          <td>${formaterDate(emprunt.date_retour_prevu)}</td>
+          <td>-</td>
+          <td class="actions-cell">${actions}</td>
+        </tr>
+        `
+      );
+    });
+  } catch (error) {
+    console.error('Erreur chargement emprunts :', error);
+
     tbody.innerHTML =
       '<tr><td colspan="6">Erreur lors du chargement des emprunts.</td></tr>';
-    return;
   }
-
-  tbody.innerHTML = data.length
-    ? ''
-    : '<tr><td colspan="6">Aucun emprunt.</td></tr>';
-
-  data.forEach((emprunt) => {
-    const utilisateur =
-      `${emprunt.utilisateur?.first_name || ''} ${
-        emprunt.utilisateur?.last_name || ''
-      }`.trim() ||
-      emprunt.utilisateur?.email ||
-      'Utilisateur inconnu';
-
-    const titreLivre =
-      emprunt.livre?.titre ||
-      'Livre inconnu';
-
-    const dateRetour = emprunt.date_retour_prevu
-      ? new Date(emprunt.date_retour_prevu).toISOString().slice(0, 10)
-      : dateDans14Jours();
-
-    let actions = '-';
-
-    if (emprunt.statut === 'pending') {
-      actions = `
-        <label class="table-label">
-          Date retour
-          <input
-            class="input-date"
-            data-id="${emprunt.id}"
-            type="date"
-            value="${dateRetour}"
-          >
-        </label>
-
-        <button
-          class="btn-accept"
-          data-action="accepter-emprunt"
-          data-id="${emprunt.id}"
-          data-livre="${emprunt.livre_id}"
-        >
-          Accepter
-        </button>
-
-        <button
-          class="btn-reject"
-          data-action="refuser-emprunt"
-          data-id="${emprunt.id}"
-        >
-          Refuser
-        </button>
-      `;
-    }
-
-    if (emprunt.statut === 'approved') {
-      actions = `
-        <label class="table-label">
-          Modifier date
-          <input
-            class="input-date"
-            data-id="${emprunt.id}"
-            type="date"
-            value="${dateRetour}"
-          >
-        </label>
-
-        <button
-          class="btn-return"
-          data-action="sauver-date"
-          data-id="${emprunt.id}"
-        >
-          Enregistrer
-        </button>
-
-        <label class="table-label">
-          Pénalité Ar
-          <input
-            class="input-penalite"
-            data-id="${emprunt.id}"
-            type="number"
-            min="0"
-            value="0"
-          >
-        </label>
-
-        <button
-          class="btn-return"
-          data-action="retour-livre"
-          data-id="${emprunt.id}"
-          data-livre="${emprunt.livre_id}"
-        >
-          Livre retourné
-        </button>
-      `;
-    }
-
-    if (emprunt.statut === 'returned') {
-      actions = '<span class="help-text">Livre retourné</span>';
-    }
-
-    if (emprunt.statut === 'rejected') {
-      actions = '<span class="help-text">Demande refusée</span>';
-    }
-
-    tbody.insertAdjacentHTML(
-      'beforeend',
-      `
-      <tr>
-        <td>${echapper(utilisateur)}</td>
-        <td>${echapper(titreLivre)}</td>
-
-        <td>
-          <span class="badge badge-${echapper(emprunt.statut || '')}">
-            ${echapper(emprunt.statut || '-')}
-          </span>
-        </td>
-
-        <td>${formaterDate(emprunt.date_retour_prevu)}</td>
-
-        <td>-</td>
-
-        <td class="actions-cell">${actions}</td>
-      </tr>
-      `
-    );
-  });
 }
 
 async function actionEmprunt(event) {
@@ -542,9 +564,11 @@ async function ajouterLivre(event) {
 
   if (error) {
     console.error('Erreur ajout livre :', error);
+
     message.textContent =
       'Erreur : référence déjà utilisée ou accès refusé.';
     message.className = 'message error';
+
     return;
   }
 
@@ -566,8 +590,10 @@ async function chargerLivres() {
 
   if (error) {
     console.error('Erreur livres :', error);
+
     tbody.innerHTML =
       '<tr><td colspan="7">Erreur lors du chargement des livres.</td></tr>';
+
     return;
   }
 
@@ -738,4 +764,4 @@ function imprimerQR() {
   fenetre.document.close();
 
   setTimeout(() => fenetre.print(), 400);
-}
+        }
