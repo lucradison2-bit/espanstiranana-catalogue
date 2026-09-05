@@ -29,7 +29,6 @@
     </div>
   </header>
 
-  <!-- On retire "hidden" pour forcer l'affichage -->
   <main id="contenu-admin" class="container">
     <section class="hero">
       <p class="eyebrow">Accès réservé</p>
@@ -187,9 +186,19 @@
   </footer>
 
   <script type="module">
-    // On n'appelle PAS verifierAdmin(), on affiche directement
+    import { supabase } from './js/config.js';
     import { initAdministration } from './js/administration.js';
-    await initAdministration();
+
+    // On vérifie juste que l'utilisateur est connecté, sans bloquer l'affichage
+    const { data: { session } } = await supabase.auth.getSession();
+
+    if (!session) {
+      // Si pas connecté, on redirige vers la page de connexion
+      window.location.href = 'connexion.html';
+    } else {
+      // On initialise l'admin normalement
+      await initAdministration();
+    }
   </script>
 </body>
-  </html>
+</html>
