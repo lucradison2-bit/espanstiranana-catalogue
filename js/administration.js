@@ -1,5 +1,5 @@
 import { supabase } from './config.js';
-import { verifierAdmin } from './commun.js';
+import { verifierAdmin, getUtilisateurCourant } from './commun.js';
 
 const echapper = (texte) => {
   const div = document.createElement('div');
@@ -67,7 +67,9 @@ async function chargerComptes() {
 
   data.forEach((profil) => {
     const nom =
-      `${profil.first_name || ''} ${profil.last_name || ''}`.trim();
+      `${profil.first_name || ''} ${profil.last_name || ''}`.trim() ||
+      profil.last_name ||
+      '-';
 
     tbody.insertAdjacentHTML(
       'beforeend',
@@ -392,7 +394,7 @@ async function actionEmprunt(event) {
       chargerLivres()
     ]);
   } catch (error) {
-    console.error(error);
+    console.error('Erreur action emprunt:', error);
     alert("L'action a échoué.");
   }
 }
@@ -601,4 +603,4 @@ function imprimerQR() {
   fenetre.document.close();
 
   setTimeout(() => fenetre.print(), 400);
-         }
+                         }
