@@ -26,21 +26,19 @@
       <h1>Créer un compte</h1>
 
       <p>
-        Confirmez votre e-mail puis attendez la validation d’un administrateur.
+        Confirmez votre e-mail puis attendez la validation d'un administrateur.
       </p>
 
       <form id="form-inscription">
-        <div class="form-grid">
-          <label>
-            Prénom *
-            <input id="first_name" type="text" required>
-          </label>
-
-          <label>
-            Nom *
-            <input id="last_name" type="text" required>
-          </label>
-        </div>
+        <label>
+          Nom complet *
+          <input
+            id="full_name"
+            type="text"
+            required
+            placeholder="Exemple : RAKOTO ou RAKOTO Jean"
+          >
+        </label>
 
         <label>
           Adresse e-mail *
@@ -58,7 +56,7 @@
         </label>
 
         <label>
-          Carte d’identité
+          Carte d'identité
           <input
             id="carte_identite"
             type="text"
@@ -102,8 +100,7 @@
 
       try {
         await inscrireUtilisateur({
-          first_name: document.querySelector('#first_name').value,
-          last_name: document.querySelector('#last_name').value,
+          full_name: document.querySelector('#full_name').value,
           email: document.querySelector('#email').value,
           password: document.querySelector('#password').value,
           carte_identite: document.querySelector('#carte_identite').value,
