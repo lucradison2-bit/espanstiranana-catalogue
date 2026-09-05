@@ -3,12 +3,63 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>TEST SIMPLE</title>
+  <title>Administration TEST 2</title>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 
 <body>
-  <h1>TEST SIMPLE</h1>
-  <p>Si tu vois ce texte, la page administration.html est bien chargée.</p>
-  <p>Ne touche à rien d’autre pour l’instant.</p>
+  <header class="site-header">
+    <div class="nav-container">
+      <a class="site-title" href="index.html">ESP Antsiranana</a>
+      <nav class="nav-menu">
+        <a href="index.html">Accueil</a>
+        <a href="catalogue.html">Catalogue</a>
+        <a href="livre.html">Scanner un livre</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- On retire la classe "hidden" pour être sûr que ça s'affiche -->
+  <main id="contenu-admin" class="container">
+    <section class="hero">
+      <p class="eyebrow">TEST 2</p>
+      <h1>Administration – test avec style</h1>
+      <p>Si tu vois ce texte, le CSS est bon et le contenu s'affiche.</p>
+    </section>
+
+    <section class="content-card">
+      <h2>TEST – Comptes à valider</h2>
+      <p>Ceci est un faux tableau de test.</p>
+      <div class="table-wrapper">
+        <table id="table-comptes">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>TEST USER</td>
+              <td>test@example.com</td>
+              <td>active</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <h2>TEST – Tous les membres</h2>
+      <p>Si tu vois cette section, la nouvelle partie est bonne.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    ESP Antsiranana — EIT 2 · Bibliothèque (test 2)
+  </footer>
+
+  <!-- AUCUN script JS pour l'instant -->
 </body>
-</html>
+  </html>
