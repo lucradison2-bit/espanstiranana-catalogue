@@ -139,7 +139,7 @@ function afficherFicheLivre(livre) {
     if (error) {
       message.textContent = "Impossible d'envoyer la demande.";
       message.className = 'message error';
-      console.error(error);
+      console.error('Erreur emprunt:', error);
       return;
     }
 
