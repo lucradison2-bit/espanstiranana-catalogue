@@ -1,21 +1,21 @@
 :root {
-  --sky: #1d9bf0;
-  --blue: #1d9bf0;
-  --blue2: #1a8cd8;
-  --light: #e8f5fd;
-  --pale: #f7fbff;
+  --sky: #4b5563;
+  --blue: #374151;
+  --blue2: #1f2937;
+  --light: #e5e7eb;
+  --pale: #f9fafb;
   --white: #ffffff;
-  --text: #0f1419;
-  --muted: #536471;
-  --border: #cfe9fa;
-  --green: #00ba7c;
-  --greenbg: #e8f5f1;
-  --orange: #f59e0b;
-  --orangebg: #fff7e6;
-  --red: #f4212e;
-  --redbg: #ffebee;
-  --purple: #7856ff;
-  --shadow: 0 8px 22px rgba(29, 155, 240, 0.14);
+  --text: #111827;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --green: #16a34a;
+  --greenbg: #dcfce7;
+  --orange: #b45309;
+  --orangebg: #fef3c7;
+  --red: #dc2626;
+  --redbg: #fee2e2;
+  --purple: #7c3aed;
+  --shadow: 0 8px 22px rgba(31, 41, 55, 0.14);
   --radius: 14px;
 }
 
@@ -30,7 +30,7 @@ html {
 body {
   min-height: 100vh;
   margin: 0;
-  background: linear-gradient(180deg, #ffffff, #f7fbff);
+  background: linear-gradient(180deg, #ffffff, #f9fafb);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
   line-height: 1.55;
@@ -51,7 +51,7 @@ textarea {
   top: 0;
   z-index: 100;
   background: linear-gradient(90deg, var(--sky), var(--blue));
-  box-shadow: 0 3px 14px rgba(29, 155, 240, 0.22);
+  box-shadow: 0 3px 14px rgba(31, 41, 55, 0.22);
 }
 
 .nav-container {
@@ -134,7 +134,7 @@ button {
 .btn:hover,
 button:hover {
   background: var(--blue2);
-  box-shadow: 0 4px 12px rgba(29, 155, 240, 0.25);
+  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.25);
   transform: translateY(-1px);
 }
 
@@ -165,7 +165,7 @@ button:disabled {
 .btn-danger:hover,
 .btn-reject:hover,
 .btn-delete:hover {
-  background: #d91a2a;
+  background: #b91c1c;
 }
 
 .btn-accept {
@@ -173,7 +173,7 @@ button:disabled {
 }
 
 .btn-accept:hover {
-  background: #009c68;
+  background: #15803d;
 }
 
 .btn-return,
@@ -183,7 +183,7 @@ button:disabled {
 
 .btn-return:hover,
 .btn-purple:hover {
-  background: #6245d6;
+  background: #6d28d9;
 }
 
 .btn-hero {
@@ -339,7 +339,7 @@ h3 {
   display: grid;
   grid-template-columns: repeat(2, minmax(190px, 1fr));
   gap: 18px;
-  margin-top: 22px;
+ margin-top: 22px;
 }
 
 .stat-card {
@@ -444,14 +444,14 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 8px;
   outline: none;
-  background: #ffffff;
+ background: #ffffff;
   color: var(--text);
 }
 
 input:focus,
 textarea:focus {
   border-color: var(--blue);
-  box-shadow: 0 0 0 3px rgba(29, 155, 240, 0.18);
+  box-shadow: 0 0 0 3px rgba(31, 41, 55, 0.18);
 }
 
 textarea {
@@ -555,7 +555,7 @@ td button {
   border-radius: 50px;
   font-size: 0.75rem;
   font-weight: 850;
-  text-transform: capitalize;
+ text-transform: capitalize;
 }
 
 .badge-pending {
@@ -660,7 +660,7 @@ td button {
   .nav-container {
     width: calc(100% - 24px);
     padding: 13px 0;
-    align-items: flex-start;
+   align-items: flex-start;
     flex-direction: column;
     gap: 12px;
   }
@@ -697,4 +697,4 @@ td button {
   .user-name {
     max-width: 130px;
   }
-    }
+}
