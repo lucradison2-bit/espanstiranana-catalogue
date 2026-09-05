@@ -28,10 +28,12 @@ export async function initMenu() {
   afficher(lienEspace);
 
   if (nomUtilisateur) {
-    nomUtilisateur.textContent =
+    const nomAffiche =
       `${info.profil.first_name || ''} ${info.profil.last_name || ''}`.trim() ||
+      info.profil.last_name ||
       info.profil.email;
 
+    nomUtilisateur.textContent = nomAffiche;
     afficher(nomUtilisateur);
   }
 
