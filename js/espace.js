@@ -37,11 +37,11 @@ export async function afficherEspace() {
     .select(
       `
       statut,
+      livre_id,
       date_emprunt,
       date_retour_prevu,
       date_retour_reel,
       penalite,
-      livre_id
       livres(titres)
     `
     )
