@@ -20,7 +20,7 @@ const convertirDateISO = (date) =>
   date ? new Date(`${date}T12:00:00`).toISOString() : null;
 
 export async function initAdministration() {
-  const estAdmin = await verifierAdmin();
+  //const estAdmin = await verifierAdmin();
 
   document.querySelector('#contenu-admin').classList.remove('hidden');
 
