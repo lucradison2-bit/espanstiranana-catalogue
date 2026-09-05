@@ -26,11 +26,7 @@ export async function initAdministration() {
     return;
   }
 
-  const contenuAdmin = document.querySelector('#contenu-admin');
-
-  if (contenuAdmin) {
-    contenuAdmin.classList.remove('hidden');
-  }
+  document.querySelector('#contenu-admin').classList.remove('hidden');
 
   installerEvenements();
 
@@ -66,11 +62,9 @@ async function chargerComptes() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Erreur chargement comptes :', error);
-
+    console.error('Erreur comptes :', error);
     tbody.innerHTML =
       '<tr><td colspan="5">Erreur lors du chargement des comptes.</td></tr>';
-
     return;
   }
 
@@ -92,7 +86,6 @@ async function chargerComptes() {
         <td>${echapper(profil.email || '-')}</td>
         <td>${echapper(profil.carte_identite || '-')}</td>
         <td>${echapper(profil.carte_etudiant || '-')}</td>
-
         <td>
           <button
             class="btn-accept"
@@ -125,11 +118,9 @@ async function chargerTousMembres() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Erreur chargement membres :', error);
-
+    console.error('Erreur membres :', error);
     tbody.innerHTML =
       '<tr><td colspan="5">Erreur lors du chargement des membres.</td></tr>';
-
     return;
   }
 
@@ -148,19 +139,14 @@ async function chargerTousMembres() {
         ? 'Administrateur'
         : 'Utilisateur';
 
-    let statut = profil.status || '-';
-
-    if (profil.status === 'active') {
-      statut = 'Actif';
-    }
-
-    if (profil.status === 'pending') {
-      statut = 'En attente';
-    }
-
-    if (profil.status === 'rejected') {
-      statut = 'Refusé';
-    }
+    const statut =
+      profil.status === 'active'
+        ? 'Actif'
+        : profil.status === 'pending'
+          ? 'En attente'
+          : profil.status === 'rejected'
+            ? 'Refusé'
+            : profil.status || '-';
 
     const action =
       profil.role === 'admin'
@@ -251,7 +237,7 @@ async function actionMembre(event) {
     console.error('Erreur suppression membre :', error);
 
     alert(
-      'Impossible de supprimer ce membre. Nous allons vérifier la politique Supabase.'
+      'Impossible de supprimer ce membre. Vérifions ensuite les politiques Supabase.'
     );
 
     return;
@@ -269,18 +255,29 @@ async function chargerEmprunts() {
   const { data, error } = await supabase
     .from('emprunts')
     .select(`
-      *,
-      profiles(first_name, last_name, email),
-      livres(titre)
+      id,
+      user_id,
+      livre_id,
+      statut,
+      date_emprunt,
+      date_retour_prevu,
+      date_retour_reel,
+      created_at,
+      utilisateur:profiles!emprunts_user_id_fkey (
+        first_name,
+        last_name,
+        email
+      ),
+      livre:livres!emprunts_livre_id_fkey (
+        titre
+      )
     `)
-    .order('date_demande', { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Erreur chargement emprunts :', error);
-
+    console.error('Erreur emprunts :', error);
     tbody.innerHTML =
       '<tr><td colspan="6">Erreur lors du chargement des emprunts.</td></tr>';
-
     return;
   }
 
@@ -290,11 +287,15 @@ async function chargerEmprunts() {
 
   data.forEach((emprunt) => {
     const utilisateur =
-      `${emprunt.profiles?.first_name || ''} ${
-        emprunt.profiles?.last_name || ''
+      `${emprunt.utilisateur?.first_name || ''} ${
+        emprunt.utilisateur?.last_name || ''
       }`.trim() ||
-      emprunt.profiles?.email ||
-      '-';
+      emprunt.utilisateur?.email ||
+      'Utilisateur inconnu';
+
+    const titreLivre =
+      emprunt.livre?.titre ||
+      'Livre inconnu';
 
     const dateRetour = emprunt.date_retour_prevu
       ? new Date(emprunt.date_retour_prevu).toISOString().slice(0, 10)
@@ -360,7 +361,7 @@ async function chargerEmprunts() {
             data-id="${emprunt.id}"
             type="number"
             min="0"
-            value="${Number(emprunt.penalite || 0)}"
+            value="0"
           >
         </label>
 
@@ -375,20 +376,12 @@ async function chargerEmprunts() {
       `;
     }
 
-    if (
-      emprunt.statut === 'returned' &&
-      Number(emprunt.penalite) > 0 &&
-      emprunt.statut_penalite !== 'paid'
-    ) {
-      actions = `
-        <button
-          class="btn-accept"
-          data-action="payer-penalite"
-          data-id="${emprunt.id}"
-        >
-          Pénalité payée
-        </button>
-      `;
+    if (emprunt.statut === 'returned') {
+      actions = '<span class="help-text">Livre retourné</span>';
+    }
+
+    if (emprunt.statut === 'rejected') {
+      actions = '<span class="help-text">Demande refusée</span>';
     }
 
     tbody.insertAdjacentHTML(
@@ -396,23 +389,17 @@ async function chargerEmprunts() {
       `
       <tr>
         <td>${echapper(utilisateur)}</td>
-        <td>${echapper(emprunt.livres?.titre || '-')}</td>
+        <td>${echapper(titreLivre)}</td>
 
         <td>
-          <span class="badge badge-${emprunt.statut}">
+          <span class="badge badge-${echapper(emprunt.statut || '')}">
             ${echapper(emprunt.statut || '-')}
           </span>
         </td>
 
         <td>${formaterDate(emprunt.date_retour_prevu)}</td>
 
-        <td>
-          ${
-            Number(emprunt.penalite || 0) > 0
-              ? `${emprunt.penalite} Ar`
-              : '-'
-          }
-        </td>
+        <td>-</td>
 
         <td class="actions-cell">${actions}</td>
       </tr>
@@ -502,19 +489,11 @@ async function actionEmprunt(event) {
     }
 
     if (action === 'retour-livre') {
-      const penalite = Number(
-        document.querySelector(
-          `.input-penalite[data-id="${id}"]`
-        )?.value || 0
-      );
-
       let resultat = await supabase
         .from('emprunts')
         .update({
           statut: 'returned',
-          date_retour_reel: new Date().toISOString(),
-          penalite,
-          statut_penalite: penalite > 0 ? 'pending' : 'none'
+          date_retour_reel: new Date().toISOString()
         })
         .eq('id', id);
 
@@ -529,17 +508,6 @@ async function actionEmprunt(event) {
 
       if (resultat.error) {
         throw resultat.error;
-      }
-    }
-
-    if (action === 'payer-penalite') {
-      const { error } = await supabase
-        .from('emprunts')
-        .update({ statut_penalite: 'paid' })
-        .eq('id', id);
-
-      if (error) {
-        throw error;
       }
     }
 
@@ -574,11 +542,9 @@ async function ajouterLivre(event) {
 
   if (error) {
     console.error('Erreur ajout livre :', error);
-
     message.textContent =
       'Erreur : référence déjà utilisée ou accès refusé.';
     message.className = 'message error';
-
     return;
   }
 
@@ -599,11 +565,9 @@ async function chargerLivres() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Erreur chargement livres :', error);
-
+    console.error('Erreur livres :', error);
     tbody.innerHTML =
       '<tr><td colspan="7">Erreur lors du chargement des livres.</td></tr>';
-
     return;
   }
 
@@ -683,11 +647,7 @@ async function actionLivre(event) {
 
     if (error) {
       console.error('Erreur suppression livre :', error);
-
-      alert(
-        'Impossible de supprimer ce livre. Il est peut-être lié à un emprunt.'
-      );
-
+      alert('Impossible de supprimer ce livre.');
       return;
     }
 
