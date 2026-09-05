@@ -14,9 +14,12 @@ export async function afficherEspace() {
 
   const profil = info.profil;
 
-  document.querySelector('#profil-nom').textContent =
-    `${profil.first_name || ''} ${profil.last_name || ''}`.trim() || '-';
+  const nomAffiche =
+    `${profil.first_name || ''} ${profil.last_name || ''}`.trim() ||
+    profil.last_name ||
+    '-';
 
+  document.querySelector('#profil-nom').textContent = nomAffiche;
   document.querySelector('#profil-email').textContent =
     profil.email || '-';
 
