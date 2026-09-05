@@ -36,13 +36,13 @@ export async function afficherEspace() {
     .from('emprunts')
     .select(
       `
-      statut,
+      id,
       livre_id,
+      statut,
       date_emprunt,
       date_retour_prevu,
       date_retour_reel,
-      penalite,
-      livres(titres)
+      penalite
     `
     )
     .eq('user_id', info.user.id)
