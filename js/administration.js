@@ -1,3 +1,4 @@
+alert('administration.js est chargé');
 import { supabase } from './config.js';
 import { convertirDateISO } from './utils.js';
 
