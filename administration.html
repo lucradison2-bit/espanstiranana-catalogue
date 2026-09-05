@@ -4,7 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Administration | ESP Antsiranana</title>
+
   <link rel="stylesheet" href="css/style.css">
+
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
@@ -12,6 +14,7 @@
   <header class="site-header">
     <div class="nav-container">
       <a class="site-title" href="index.html">ESP Antsiranana</a>
+
       <nav class="nav-menu">
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
@@ -19,9 +22,12 @@
         <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
         <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
+
       <div class="nav-actions">
         <span id="nom-utilisateur" class="user-name hidden"></span>
-        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">
+          Connexion
+        </a>
         <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
           Déconnexion
         </button>
@@ -29,8 +35,7 @@
     </div>
   </header>
 
-  <!-- On retire "hidden" par défaut, on affiche toujours -->
-  <main id="contenu-admin" class="container">
+  <main id="contenu-admin" class="container hidden">
     <section class="hero">
       <p class="eyebrow">Accès réservé</p>
       <h1>Administration</h1>
@@ -41,6 +46,7 @@
 
     <section class="content-card">
       <h2>Comptes à valider</h2>
+
       <div class="table-wrapper">
         <table id="table-comptes">
           <thead>
@@ -52,6 +58,7 @@
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
               <td colspan="5">Chargement…</td>
@@ -63,6 +70,12 @@
 
     <section class="content-card">
       <h2>Tous les membres</h2>
+
+      <p class="help-text">
+        Cette liste affiche les comptes utilisateurs. Le compte administrateur
+        ne peut pas être supprimé depuis cette page.
+      </p>
+
       <div class="table-wrapper">
         <table id="table-tous-membres">
           <thead>
@@ -71,14 +84,13 @@
               <th>E-mail</th>
               <th>Rôle</th>
               <th>Statut</th>
-              <th>Carte identité</th>
-              <th>Carte étudiant</th>
               <th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
-              <td colspan="7">Chargement…</td>
+              <td colspan="5">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -87,10 +99,13 @@
 
     <section class="content-card">
       <h2>Emprunts</h2>
+
       <p class="help-text">
-        Vous choisissez la date de retour et pouvez la modifier avant le retour
-        du livre.
+        Vous choisissez la date de retour pour chaque demande d’emprunt.
+        Après acceptation, vous pouvez encore modifier cette date avant le
+        retour du livre.
       </p>
+
       <div class="table-wrapper">
         <table id="table-emprunts">
           <thead>
@@ -103,6 +118,7 @@
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
               <td colspan="6">Chargement…</td>
@@ -114,36 +130,49 @@
 
     <section class="content-card">
       <h2>Ajouter un livre physique</h2>
+
       <form id="form-ajout-livre">
         <div class="form-grid">
           <label>
             Titre *
             <input id="livre-titre" type="text" required>
           </label>
+
           <label>
             Auteur
             <input id="livre-auteur" type="text">
           </label>
+
           <label>
             Référence unique *
-            <input id="livre-ref" type="text" required placeholder="ESP-INFO-001">
+            <input
+              id="livre-ref"
+              type="text"
+              required
+              placeholder="ESP-INFO-001"
+            >
           </label>
+
           <label>
             Catégorie
             <input id="livre-categorie" type="text">
           </label>
         </div>
+
         <label>
           Résumé
           <textarea id="livre-resume"></textarea>
         </label>
+
         <button type="submit">Ajouter le livre</button>
+
         <p id="message-livre" class="message"></p>
       </form>
     </section>
 
     <section class="content-card">
       <h2>Livres et QR codes</h2>
+
       <div class="table-wrapper">
         <table id="table-livres">
           <thead>
@@ -157,6 +186,7 @@
               <th>Action</th>
             </tr>
           </thead>
+
           <tbody>
             <tr>
               <td colspan="7">Chargement…</td>
@@ -169,12 +199,21 @@
 
   <div id="modal-qr" class="modal hidden">
     <div class="modal-content">
-      <button id="btn-fermer-qr" class="modal-close" type="button">×</button>
+      <button id="btn-fermer-qr" class="modal-close" type="button">
+        ×
+      </button>
+
       <h2 id="qr-titre">QR code</h2>
+
       <p id="qr-reference" class="help-text"></p>
+
       <div id="qrcode-container" class="qrcode-container"></div>
+
       <div class="button-row">
-        <button id="btn-telecharger-qr" type="button">Télécharger</button>
+        <button id="btn-telecharger-qr" type="button">
+          Télécharger
+        </button>
+
         <button id="btn-imprimer-qr" class="btn btn-purple" type="button">
           Imprimer
         </button>
@@ -187,22 +226,11 @@
   </footer>
 
   <script type="module">
-    import { supabase } from './js/config.js';
+    import { initMenu } from './js/commun.js';
     import { initAdministration } from './js/administration.js';
 
-    // Test simple : on vérifie juste la session
-    const { data: { session } } = await supabase.auth.getSession();
-
-    console.log('Session admin page:', session);
-
-    if (!session) {
-      // Pas connecté → on redirige
-      window.location.href = 'connexion.html';
-    } else {
-      // Connecté → on initialise l'admin
-      console.log('Initialisation administration...');
-      await initAdministration();
-    }
+    await initMenu();
+    await initAdministration();
   </script>
 </body>
 </html>
