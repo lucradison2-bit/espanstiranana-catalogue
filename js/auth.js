@@ -21,8 +21,7 @@ export const validerCarteEtudiant = (valeur) =>
   !valeur || valeur.trim() === '' || /^[A-Za-z0-9_-]+$/.test(valeur);
 
 export async function inscrireUtilisateur({
-  first_name,
-  last_name,
+  full_name,
   email,
   password,
   carte_identite = '',
@@ -68,8 +67,8 @@ export async function inscrireUtilisateur({
       {
         id: data.user.id,
         email: e,
-        first_name: first_name.trim(),
-        last_name: last_name.trim(),
+        first_name: null,
+        last_name: full_name.trim(),
         carte_identite: carte_identite.trim() || null,
         carte_etudiant: carte_etudiant.trim() || null,
         role: isAdmin(e) ? 'admin' : 'user',
@@ -146,4 +145,4 @@ export async function getUtilisateurCourant() {
 
 export async function deconnecterUtilisateur() {
   return supabase.auth.signOut();
-          }
+  }
