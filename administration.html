@@ -3,8 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Administration TEST 2</title>
+  <title>Administration | ESP Antsiranana</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -15,35 +16,45 @@
         <a href="index.html">Accueil</a>
         <a href="catalogue.html">Catalogue</a>
         <a href="livre.html">Scanner un livre</a>
+        <a id="lien-espace" class="hidden" href="espace.html">Mon espace</a>
+        <a id="lien-admin" class="hidden" href="administration.html">Administration</a>
       </nav>
+      <div class="nav-actions">
+        <span id="nom-utilisateur" class="user-name hidden"></span>
+        <a id="btn-connexion" class="btn btn-outline" href="connexion.html">Connexion</a>
+        <button id="btn-deconnexion" type="button" class="btn btn-danger hidden">
+          Déconnexion
+        </button>
+      </div>
     </div>
   </header>
 
-  <!-- On retire la classe "hidden" pour être sûr que ça s'affiche -->
+  <!-- On retire "hidden" pour forcer l'affichage -->
   <main id="contenu-admin" class="container">
     <section class="hero">
-      <p class="eyebrow">TEST 2</p>
-      <h1>Administration – test avec style</h1>
-      <p>Si tu vois ce texte, le CSS est bon et le contenu s'affiche.</p>
+      <p class="eyebrow">Accès réservé</p>
+      <h1>Administration</h1>
+      <p>
+        Validation des comptes, emprunts, dates de retour, pénalités et livres.
+      </p>
     </section>
 
     <section class="content-card">
-      <h2>TEST – Comptes à valider</h2>
-      <p>Ceci est un faux tableau de test.</p>
+      <h2>Comptes à valider</h2>
       <div class="table-wrapper">
         <table id="table-comptes">
           <thead>
             <tr>
               <th>Nom</th>
               <th>E-mail</th>
-              <th>Statut</th>
+              <th>Carte identité</th>
+              <th>Carte étudiant</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td>TEST USER</td>
-              <td>test@example.com</td>
-              <td>active</td>
+              <td colspan="5">Chargement…</td>
             </tr>
           </tbody>
         </table>
@@ -51,15 +62,134 @@
     </section>
 
     <section class="content-card">
-      <h2>TEST – Tous les membres</h2>
-      <p>Si tu vois cette section, la nouvelle partie est bonne.</p>
+      <h2>Tous les membres</h2>
+      <div class="table-wrapper">
+        <table id="table-tous-membres">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>E-mail</th>
+              <th>Rôle</th>
+              <th>Statut</th>
+              <th>Carte identité</th>
+              <th>Carte étudiant</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7">Chargement…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <h2>Emprunts</h2>
+      <p class="help-text">
+        Vous choisissez la date de retour et pouvez la modifier avant le retour
+        du livre.
+      </p>
+      <div class="table-wrapper">
+        <table id="table-emprunts">
+          <thead>
+            <tr>
+              <th>Utilisateur</th>
+              <th>Livre</th>
+              <th>Statut</th>
+              <th>Retour prévu</th>
+              <th>Pénalité</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6">Chargement…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="content-card">
+      <h2>Ajouter un livre physique</h2>
+      <form id="form-ajout-livre">
+        <div class="form-grid">
+          <label>
+            Titre *
+            <input id="livre-titre" type="text" required>
+          </label>
+          <label>
+            Auteur
+            <input id="livre-auteur" type="text">
+          </label>
+          <label>
+            Référence unique *
+            <input id="livre-ref" type="text" required placeholder="ESP-INFO-001">
+          </label>
+          <label>
+            Catégorie
+            <input id="livre-categorie" type="text">
+          </label>
+        </div>
+        <label>
+          Résumé
+          <textarea id="livre-resume"></textarea>
+        </label>
+        <button type="submit">Ajouter le livre</button>
+        <p id="message-livre" class="message"></p>
+      </form>
+    </section>
+
+    <section class="content-card">
+      <h2>Livres et QR codes</h2>
+      <div class="table-wrapper">
+        <table id="table-livres">
+          <thead>
+            <tr>
+              <th>Titre</th>
+              <th>Auteur</th>
+              <th>Référence</th>
+              <th>Catégorie</th>
+              <th>Disponibilité</th>
+              <th>QR</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="7">Chargement…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   </main>
 
+  <div id="modal-qr" class="modal hidden">
+    <div class="modal-content">
+      <button id="btn-fermer-qr" class="modal-close" type="button">×</button>
+      <h2 id="qr-titre">QR code</h2>
+      <p id="qr-reference" class="help-text"></p>
+      <div id="qrcode-container" class="qrcode-container"></div>
+      <div class="button-row">
+        <button id="btn-telecharger-qr" type="button">Télécharger</button>
+        <button id="btn-imprimer-qr" class="btn btn-purple" type="button">
+          Imprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-footer">
-    ESP Antsiranana — EIT 2 · Bibliothèque (test 2)
+    ESP Antsiranana — EIT 2 · Bibliothèque
   </footer>
 
-  <!-- AUCUN script JS pour l'instant -->
+  <script type="module">
+    // On n'appelle PAS verifierAdmin(), on affiche directement
+    import { initAdministration } from './js/administration.js';
+    await initAdministration();
+  </script>
 </body>
   </html>
