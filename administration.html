@@ -29,6 +29,7 @@
     </div>
   </header>
 
+  <!-- On retire "hidden" par défaut, on affiche toujours -->
   <main id="contenu-admin" class="container">
     <section class="hero">
       <p class="eyebrow">Accès réservé</p>
@@ -189,16 +190,19 @@
     import { supabase } from './js/config.js';
     import { initAdministration } from './js/administration.js';
 
-    // On vérifie juste que l'utilisateur est connecté, sans bloquer l'affichage
+    // Test simple : on vérifie juste la session
     const { data: { session } } = await supabase.auth.getSession();
 
+    console.log('Session admin page:', session);
+
     if (!session) {
-      // Si pas connecté, on redirige vers la page de connexion
+      // Pas connecté → on redirige
       window.location.href = 'connexion.html';
     } else {
-      // On initialise l'admin normalement
+      // Connecté → on initialise l'admin
+      console.log('Initialisation administration...');
       await initAdministration();
     }
   </script>
 </body>
-</html>
+            </html>
