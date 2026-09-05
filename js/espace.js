@@ -42,6 +42,7 @@ export async function afficherEspace() {
       date_retour_reel,
       penalite,
       livre_id
+      livres(titres)
     `
     )
     .eq('user_id', info.user.id)
