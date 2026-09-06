@@ -1,59 +1,19 @@
 import { getUtilisateurCourant } from './auth.js';
 import { supabase } from './config.js';
 
-const setTxt = (id, texte) => {
-  const el = document.querySelector(id);
-  if (el) el.textContent = texte ?? '-';
-};
-
-const formaterDate = (date) =>
-  date ? new Date(date).toLocaleDateString('fr-FR') : '-';
-
 export async function afficherEspace() {
   const info = await getUtilisateurCourant();
 
-  if (!info?.user || !info?.profil) {
+  // 1. Vérifier que l'utilisateur est connecté
+  if (!info?.user) {
+    console.warn('Pas d utilisateur connecté');
     location.href = 'connexion.html';
     return;
   }
 
-  const profil = info.profil;
+  console.log('Utilisateur connecté:', info.user.id);
 
-  const nomAffiche =
-    `${profil.first_name || ''} ${profil.last_name || ''}`.trim() ||
-    profil.last_name ||
-    '-';
-
-  // Profil (sans planter si un élément manque)
-  setTxt('#profil-nom', nomAffiche);
-  setTxt('#profil-email', profil.email);
-  setTxt('#profil-carte-identite', profil.carte_identite || 'Non renseignée');
-  setTxt('#profil-carte-etudiant', profil.carte_etudiant || 'Non renseignée');
-  setTxt('#profil-status', profil.status);
-
-  // Tableau
-  const table = document.querySelector('#table-historique');
-  if (!table) {
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
-    );
-    document.getElementById('debug').textContent =
-      'Element #table-historique introuvable dans le HTML';
-    return;
-  }
-
-  const tbody = table.querySelector('tbody');
-  if (!tbody) {
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
-    );
-    document.getElementById('debug').textContent =
-      'Element <tbody> introuvable dans #table-historique';
-    return;
-  }
-
+  // 2. Tester une requête très simple sur emprunts
   const { data, error } = await supabase
     .from('emprunts')
     .select('id, user_id, livre_id, statut')
@@ -61,17 +21,20 @@ export async function afficherEspace() {
     .limit(5);
 
   if (error) {
-    const message = 'Erreur Supabase:
-' + JSON.stringify(error, null, 2);
+    console.error('Erreur Supabase emprunts:', error);
+    const tbody = document.querySelector('#table-historique tbody');
+    if (tbody) {
+      tbody.innerHTML =
+        '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
+    }
+    return;
+  }
 
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
-    );
-    document.getElementById('debug').textContent = message;
+  console.log('Emprunts chargés:', data);
 
-    tbody.innerHTML =
-      '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
+  const tbody = document.querySelector('#table-historique tbody');
+  if (!tbody) {
+    console.error('Element #table-historique tbody introuvable');
     return;
   }
 
