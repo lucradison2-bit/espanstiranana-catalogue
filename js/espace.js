@@ -1,6 +1,11 @@
 import { getUtilisateurCourant } from './auth.js';
 import { supabase } from './config.js';
 
+const setTxt = (id, texte) => {
+  const el = document.querySelector(id);
+  if (el) el.textContent = texte ?? '-';
+};
+
 const formaterDate = (date) =>
   date ? new Date(date).toLocaleDateString('fr-FR') : '-';
 
@@ -19,20 +24,14 @@ export async function afficherEspace() {
     profil.last_name ||
     '-';
 
-  document.querySelector('#profil-nom').textContent = nomAffiche;
-  document.querySelector('#profil-email').textContent =
-    profil.email || '-';
+  // Profil (sans planter si un élément manque)
+  setTxt('#profil-nom', nomAffiche);
+  setTxt('#profil-email', profil.email);
+  setTxt('#profil-carte-identite', profil.carte_identite || 'Non renseignée');
+  setTxt('#profil-carte-etudiant', profil.carte_etudiant || 'Non renseignée');
+  setTxt('#profil-status', profil.status);
 
-  document.querySelector('#profil-carte-identite').textContent =
-    profil.carte_identite || 'Non renseignée';
-
-  document.querySelector('#profil-carte-etudiant').textContent =
-    profil.carte_etudiant || 'Non renseignée';
-
-  document.querySelector('#profil-status').textContent =
-    profil.status || '-';
-
-  // Chercher le tableau
+  // Tableau
   const table = document.querySelector('#table-historique');
   if (!table) {
     document.body.insertAdjacentHTML(
@@ -99,4 +98,4 @@ export async function afficherEspace() {
       `
     );
   });
-      }
+}
