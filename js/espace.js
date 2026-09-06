@@ -64,11 +64,13 @@ export async function afficherEspace() {
   tbody.innerHTML = '';
 
   data.forEach((emprunt) => {
+    const titreLivre = emprunt.livres?.titre || 'Livre sans titre';
+
     tbody.insertAdjacentHTML(
       'beforeend',
       `
       <tr>
-        <td>${emprunt.livres?.titre || 'Livre ' + (emprunt.livre_id || '-')}</td>
+        <td>${titreLivre}</td>
         <td>
           <span class="badge badge-${emprunt.statut}">
             ${emprunt.statut}
@@ -82,4 +84,4 @@ export async function afficherEspace() {
       `
     );
   });
-}
+                         }
