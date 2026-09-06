@@ -1,56 +1,40 @@
 import { getUtilisateurCourant } from './auth.js';
 import { supabase } from './config.js';
 
-const formaterDate = (date) =>
-  date ? new Date(date).toLocaleDateString('fr-FR') : '-';
-
 export async function afficherEspace() {
   const info = await getUtilisateurCourant();
 
-  if (!info?.user || !info?.profil) {
+  // 1. Vérifier que l'utilisateur est connecté
+  if (!info?.user) {
+    console.warn('Pas d utilisateur connecté');
     location.href = 'connexion.html';
     return;
   }
 
-  const profil = info.profil;
+  console.log('Utilisateur connecté:', info.user.id);
 
-  const nomAffiche =
-    `${profil.first_name || ''} ${profil.last_name || ''}`.trim() ||
-    profil.last_name ||
-    '-';
-
-  document.querySelector('#profil-nom').textContent = nomAffiche;
-  document.querySelector('#profil-email').textContent =
-    profil.email || '-';
-
-  document.querySelector('#profil-carte-identite').textContent =
-    profil.carte_identite || 'Non renseignée';
-
-  document.querySelector('#profil-carte-etudiant').textContent =
-    profil.carte_etudiant || 'Non renseignée';
-
-  document.querySelector('#profil-status').textContent =
-    profil.status || '-';
-
+  // 2. Tester une requête très simple sur emprunts
   const { data, error } = await supabase
     .from('emprunts')
-    .select(`
-      id,
-      livre_id,
-      statut,
-      date_emprunt,
-      date_retour_prevu,
-      date_retour_reel
-    `)
+    .select('id, user_id, livre_id, statut')
     .eq('user_id', info.user.id)
-    .order('created_at', { ascending: false });
-
-  const tbody = document.querySelector('#table-historique tbody');
+    .limit(5);
 
   if (error) {
-    console.error('Erreur chargement emprunts:', error);
-    tbody.innerHTML =
-      '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
+    console.error('Erreur Supabase emprunts:', error);
+    const tbody = document.querySelector('#table-historique tbody');
+    if (tbody) {
+      tbody.innerHTML =
+        '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
+    }
+    return;
+  }
+
+  console.log('Emprunts chargés:', data);
+
+  const tbody = document.querySelector('#table-historique tbody');
+  if (!tbody) {
+    console.error('Element #table-historique tbody introuvable');
     return;
   }
 
@@ -67,18 +51,14 @@ export async function afficherEspace() {
       'beforeend',
       `
       <tr>
-        <td>Livre ${emprunt.livre_id || '-'}</td>
-        <td>
-          <span class="badge badge-${emprunt.statut}">
-            ${emprunt.statut}
-          </span>
-        </td>
-        <td>${formaterDate(emprunt.date_emprunt)}</td>
-        <td>${formaterDate(emprunt.date_retour_prevu)}</td>
-        <td>${formaterDate(emprunt.date_retour_reel)}</td>
+        <td>${emprunt.id}</td>
+        <td>${emprunt.livre_id}</td>
+        <td>${emprunt.statut}</td>
+        <td>-</td>
+        <td>-</td>
         <td>-</td>
       </tr>
       `
     );
   });
-    }
+}
