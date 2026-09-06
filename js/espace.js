@@ -34,38 +34,40 @@ export async function afficherEspace() {
 
   const { data, error } = await supabase
     .from('emprunts')
-    .select(
-      `
+    .select(`
       id,
       livre_id,
       statut,
       date_emprunt,
       date_retour_prevu,
-      date_retour_reel,
-      penalite
-    `
-    )
+      date_retour_reel
+    `)
     .eq('user_id', info.user.id)
-    .order('date_demande', { ascending: false });
+    .order('created_at', { ascending: false });
 
   const tbody = document.querySelector('#table-historique tbody');
 
   if (error) {
+    console.error('Erreur chargement emprunts:', error);
     tbody.innerHTML =
       '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
     return;
   }
 
-  tbody.innerHTML = data?.length
-    ? ''
-    : '<tr><td colspan="6">Aucun emprunt.</td></tr>';
+  if (!data || data.length === 0) {
+    tbody.innerHTML =
+      '<tr><td colspan="6">Aucun emprunt.</td></tr>';
+    return;
+  }
 
-  data?.forEach((emprunt) => {
+  tbody.innerHTML = '';
+
+  data.forEach((emprunt) => {
     tbody.insertAdjacentHTML(
       'beforeend',
       `
       <tr>
-        <td>${emprunt.livres?.titre || '-'}</td>
+        <td>Livre ${emprunt.livre_id || '-'}</td>
         <td>
           <span class="badge badge-${emprunt.statut}">
             ${emprunt.statut}
@@ -74,15 +76,9 @@ export async function afficherEspace() {
         <td>${formaterDate(emprunt.date_emprunt)}</td>
         <td>${formaterDate(emprunt.date_retour_prevu)}</td>
         <td>${formaterDate(emprunt.date_retour_reel)}</td>
-        <td>
-          ${
-            Number(emprunt.penalite || 0) > 0
-              ? `${emprunt.penalite} Ar`
-              : '-'
-          }
-        </td>
+        <td>-</td>
       </tr>
       `
     );
   });
-}
+    }
