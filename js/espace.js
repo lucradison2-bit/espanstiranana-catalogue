@@ -1,34 +1,57 @@
 import { getUtilisateurCourant } from './auth.js';
 import { supabase } from './config.js';
 
+const formaterDate = (date) =>
+  date ? new Date(date).toLocaleDateString('fr-FR') : '-';
+
 export async function afficherEspace() {
   const info = await getUtilisateurCourant();
 
-  const container = document.querySelector('#table-historique');
-  if (!container) {
-    document.body.insertAdjacentHTML(
-      'beforeend',
-      '<div id="debug" style="color:red;white-space:pre-wrap;"></div>'
-    );
-    const debug = document.getElementById('debug');
-    debug.textContent = 'Element #table-historique introuvable';
+  if (!info?.user || !info?.profil) {
+    location.href = 'connexion.html';
     return;
   }
 
-  const tbody = container.querySelector('tbody');
+  const profil = info.profil;
+
+  const nomAffiche =
+    `${profil.first_name || ''} ${profil.last_name || ''}`.trim() ||
+    profil.last_name ||
+    '-';
+
+  document.querySelector('#profil-nom').textContent = nomAffiche;
+  document.querySelector('#profil-email').textContent =
+    profil.email || '-';
+
+  document.querySelector('#profil-carte-identite').textContent =
+    profil.carte_identite || 'Non renseignée';
+
+  document.querySelector('#profil-carte-etudiant').textContent =
+    profil.carte_etudiant || 'Non renseignée';
+
+  document.querySelector('#profil-status').textContent =
+    profil.status || '-';
+
+  // Chercher le tableau
+  const table = document.querySelector('#table-historique');
+  if (!table) {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
+    );
+    document.getElementById('debug').textContent =
+      'Element #table-historique introuvable dans le HTML';
+    return;
+  }
+
+  const tbody = table.querySelector('tbody');
   if (!tbody) {
     document.body.insertAdjacentHTML(
       'beforeend',
-      '<div id="debug" style="color:red;white-space:pre-wrap;"></div>'
+      '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
     );
-    const debug = document.getElementById('debug');
-    debug.textContent = 'Element tbody introuvable dans #table-historique';
-    return;
-  }
-
-  if (!info?.user) {
-    tbody.innerHTML =
-      '<tr><td colspan="6">Pas d utilisateur connecté</td></tr>';
+    document.getElementById('debug').textContent =
+      'Element <tbody> introuvable dans #table-historique';
     return;
   }
 
@@ -39,18 +62,14 @@ export async function afficherEspace() {
     .limit(5);
 
   if (error) {
-    // Afficher l erreur complete dans la page
-    const message =
-      'Erreur Supabase:
-' +
-      JSON.stringify(error, null, 2);
+    const message = 'Erreur Supabase:
+' + JSON.stringify(error, null, 2);
 
     document.body.insertAdjacentHTML(
       'beforeend',
       '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
     );
-    const debug = document.getElementById('debug');
-    debug.textContent = message;
+    document.getElementById('debug').textContent = message;
 
     tbody.innerHTML =
       '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
@@ -80,4 +99,4 @@ export async function afficherEspace() {
       `
     );
   });
-}
+      }
