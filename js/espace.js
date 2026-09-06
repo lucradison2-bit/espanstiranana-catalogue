@@ -4,16 +4,34 @@ import { supabase } from './config.js';
 export async function afficherEspace() {
   const info = await getUtilisateurCourant();
 
-  // 1. Vérifier que l'utilisateur est connecté
-  if (!info?.user) {
-    console.warn('Pas d utilisateur connecté');
-    location.href = 'connexion.html';
+  const container = document.querySelector('#table-historique');
+  if (!container) {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="debug" style="color:red;white-space:pre-wrap;"></div>'
+    );
+    const debug = document.getElementById('debug');
+    debug.textContent = 'Element #table-historique introuvable';
     return;
   }
 
-  console.log('Utilisateur connecté:', info.user.id);
+  const tbody = container.querySelector('tbody');
+  if (!tbody) {
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="debug" style="color:red;white-space:pre-wrap;"></div>'
+    );
+    const debug = document.getElementById('debug');
+    debug.textContent = 'Element tbody introuvable dans #table-historique';
+    return;
+  }
 
-  // 2. Tester une requête très simple sur emprunts
+  if (!info?.user) {
+    tbody.innerHTML =
+      '<tr><td colspan="6">Pas d utilisateur connecté</td></tr>';
+    return;
+  }
+
   const { data, error } = await supabase
     .from('emprunts')
     .select('id, user_id, livre_id, statut')
@@ -21,20 +39,21 @@ export async function afficherEspace() {
     .limit(5);
 
   if (error) {
-    console.error('Erreur Supabase emprunts:', error);
-    const tbody = document.querySelector('#table-historique tbody');
-    if (tbody) {
-      tbody.innerHTML =
-        '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
-    }
-    return;
-  }
+    // Afficher l erreur complete dans la page
+    const message =
+      'Erreur Supabase:
+' +
+      JSON.stringify(error, null, 2);
 
-  console.log('Emprunts chargés:', data);
+    document.body.insertAdjacentHTML(
+      'beforeend',
+      '<div id="debug" style="color:red;white-space:pre-wrap;font-family:monospace;"></div>'
+    );
+    const debug = document.getElementById('debug');
+    debug.textContent = message;
 
-  const tbody = document.querySelector('#table-historique tbody');
-  if (!tbody) {
-    console.error('Element #table-historique tbody introuvable');
+    tbody.innerHTML =
+      '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
     return;
   }
 
@@ -61,4 +80,4 @@ export async function afficherEspace() {
       `
     );
   });
-}
+      }
