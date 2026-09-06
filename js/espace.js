@@ -40,7 +40,8 @@ export async function afficherEspace() {
       statut,
       date_emprunt,
       date_retour_prevu,
-      date_retour_reel
+      date_retour_reel,
+      livres(titre)
     `)
     .eq('user_id', info.user.id)
     .order('created_at', { ascending: false });
@@ -67,7 +68,7 @@ export async function afficherEspace() {
       'beforeend',
       `
       <tr>
-        <td>Livre ${emprunt.livre_id || '-'}</td>
+        <td>${emprunt.livres?.titre || 'Livre ' + (emprunt.livre_id || '-')}</td>
         <td>
           <span class="badge badge-${emprunt.statut}">
             ${emprunt.statut}
