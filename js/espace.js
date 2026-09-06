@@ -32,7 +32,8 @@ export async function afficherEspace() {
   document.querySelector('#profil-status').textContent =
     profil.status || '-';
 
-  const { data, error } = await supabase
+  // 1. Charger les emprunts
+  const { data: emprunts, error: errorEmprunts } = await supabase
     .from('emprunts')
     .select(`
       id,
@@ -40,31 +41,48 @@ export async function afficherEspace() {
       statut,
       date_emprunt,
       date_retour_prevu,
-      date_retour_reel,
-      livres(titre)
+      date_retour_reel
     `)
     .eq('user_id', info.user.id)
     .order('created_at', { ascending: false });
 
   const tbody = document.querySelector('#table-historique tbody');
 
-  if (error) {
-    console.error('Erreur chargement emprunts:', error);
+  if (errorEmprunts) {
+    console.error('Erreur chargement emprunts:', errorEmprunts);
     tbody.innerHTML =
       '<tr><td colspan="6">Erreur lors du chargement.</td></tr>';
     return;
   }
 
-  if (!data || data.length === 0) {
+  if (!emprunts || emprunts.length === 0) {
     tbody.innerHTML =
       '<tr><td colspan="6">Aucun emprunt.</td></tr>';
     return;
   }
 
+  // 2. Récupérer tous les livre_id
+  const livreIds = [...new Set(emprunts.map(e => e.livre_id).filter(Boolean))];
+
+  let livresParId = new Map();
+
+  if (livreIds.length > 0) {
+    const { data: livres, error: errorLivres } = await supabase
+      .from('livres')
+      .select('id, titre')
+      .in('id', livreIds);
+
+    if (!errorLivres && livres) {
+      livresParId = new Map(livres.map(l => [l.id, l]));
+    }
+  }
+
+  // 3. Affichage
   tbody.innerHTML = '';
 
-  data.forEach((emprunt) => {
-    const titreLivre = emprunt.livres?.titre || 'Livre sans titre';
+  emprunts.forEach((emprunt) => {
+    const livre = livresParId.get(emprunt.livre_id);
+    const titreLivre = livre?.titre || 'Livre (titre inconnu)';
 
     tbody.insertAdjacentHTML(
       'beforeend',
